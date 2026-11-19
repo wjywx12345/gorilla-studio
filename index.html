@@ -261,6 +261,26 @@ button{cursor:pointer}
 .proj-chip{font-size:10px;color:var(--txt-2);background:var(--bg-4);padding:3px 8px;border-radius:6px}
 .proj-chip-btn{cursor:pointer;transition:background .15s,color .15s,transform .15s}
 .proj-chip-btn:hover{background:var(--brand);color:#fff;transform:translateY(-1px)}
+/* 项目卡片右上角操作按钮 */
+.pc-ops{position:absolute;top:10px;right:10px;z-index:3;display:flex;gap:5px;opacity:.25;transition:opacity .15s}
+.proj-card:hover .pc-ops{opacity:1}
+.pc-op{width:26px;height:26px;border:none;border-radius:7px;background:rgba(0,0,0,.42);color:#fff;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .15s}
+.pc-op:hover{background:var(--brand);transform:translateY(-1px)}
+.pc-op-del:hover{background:#e5484d}
+/* 顶栏下拉项操作按钮 */
+.pmi-op{border:none;background:transparent;color:var(--txt-3);font-size:12px;width:22px;height:22px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}
+.pmi-op:hover{background:var(--bg-5);color:var(--brand)}
+.pmi-op-del:hover{background:#e5484d;color:#fff}
+/* 编辑弹窗：图标点选 */
+.emoji-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.emoji-opt{width:42px;height:42px;font-size:20px;border:1px solid var(--line);background:var(--bg-4);border-radius:9px;cursor:pointer;transition:all .15s}
+.emoji-opt:hover{border-color:var(--brand-line);transform:translateY(-2px)}
+.emoji-opt.sel{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 2px var(--brand-soft)}
+/* 删除确认危险提示 */
+.danger-box{border:1px solid rgba(229,72,77,.4);background:rgba(229,72,77,.07);border-radius:10px;padding:16px}
+.danger-title{font-weight:700;color:#ff7b7f;font-size:14px;margin-bottom:8px}
+.danger-desc{font-size:12px;color:var(--txt-2);line-height:1.7}
+.danger-warn{font-size:11.5px;color:var(--warn);margin-top:10px}
 
 /* 统计条 */
 .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
@@ -517,7 +537,7 @@ button{cursor:pointer}
     <div class="topbar-spacer"></div>
 
     <div class="save-state" id="saveState"><span class="ss-dot"></span><span id="ssText">已保存</span></div>
-    <span title="页面版本 v2 · 若图标点不开说明缓存未更新" style="font-size:10px;color:var(--txt-3);font-family:monospace;padding:0 4px">v2.1</span>
+    <span title="页面版本 v2.2 · 若图标点不开说明缓存未更新" style="font-size:10px;color:var(--txt-3);font-family:monospace;padding:0 4px">v2.2</span>
     <button class="btn btn-ghost btn-sm" id="btnExportData" title="把全部项目数据导出为 JSON 备份">备份</button>
     <button class="btn btn-ghost btn-sm" id="btnImportData" title="从 JSON 备份恢复数据">恢复</button>
     <input type="file" id="importFile" accept="application/json" hidden>
@@ -840,6 +860,17 @@ const Store = (() => {
     if (d.activeProjectId === id) d.activeProjectId = d.projects[0] ? d.projects[0].id : null;
     save();
   }
+  function updateProject(id, patch) {
+    const d = getDB();
+    const p = d.projects.find(x => x.id === id);
+    if (!p) return null;
+    if (patch.name != null) p.name = patch.name;
+    if (patch.type != null) p.type = patch.type;
+    if (patch.emoji != null) p.emoji = patch.emoji;
+    p.updatedAt = now();
+    save();
+    return p;
+  }
 
   // ---------- 导入导出备份 ----------
   function exportBackup() { return JSON.stringify(getDB(), null, 2); }
@@ -865,7 +896,7 @@ const Store = (() => {
 
   return {
     uid, now, fmtTime, load, save, getDB, activeProject, setActive,
-    addProject, deleteProject, exportBackup, importBackup, resetToSeed, progress,
+    addProject, deleteProject, updateProject, exportBackup, importBackup, resetToSeed, progress,
     emptyProject
   };
 })();
@@ -1233,6 +1264,10 @@ const Bridge = (() => {
           Store.setActive(item.dataset.id); currentView = 'projects'; render(); toast('已切换项目', 'ok');
         } else if (act === 'new-project') {
           modalNewProject();
+        } else if (act === 'edit-project') {
+          modalEditProject(item.dataset.id);
+        } else if (act === 'del-project') {
+          modalDelProject(item.dataset.id);
         }
         return;
       }
@@ -1293,6 +1328,8 @@ const Bridge = (() => {
         `<div class="ps-menu-item ${item.id === activeId ? 'active' : ''}" data-act="switch-project" data-id="${item.id}">
           <span class="pmi-emoji">${item.emoji || '▦'}</span>
           <span class="pmi-name">${esc(item.name)}</span>
+          <button class="pmi-op" data-act="edit-project" data-id="${item.id}" title="重命名 / 换图标">✎</button>
+          <button class="pmi-op pmi-op-del" data-act="del-project" data-id="${item.id}" title="删除项目">✕</button>
           ${item.id === activeId ? '<span class="pmi-check">✓</span>' : ''}
         </div>`).join('');
       mh += `<div class="ps-menu-sep"></div>
@@ -1369,6 +1406,10 @@ const Bridge = (() => {
       html += `<div class="proj-card" data-act="open-project" data-id="${p.id}">
         <div class="proj-cover" style="background:${p.cover}">
           <span class="pc-badge tag" style="background:rgba(0,0,0,.35);color:#fff">${TYPE_LABEL[p.type] || p.type}</span>
+          <div class="pc-ops">
+            <button class="pc-op" data-act="edit-project" data-id="${p.id}" title="重命名 / 换图标">✎</button>
+            <button class="pc-op pc-op-del" data-act="del-project" data-id="${p.id}" title="删除项目">✕</button>
+          </div>
           ${p.emoji}
         </div>
         <div class="proj-body">
@@ -1743,6 +1784,8 @@ const Bridge = (() => {
     if (act === 'goto-view') { const v = el.dataset.view; if (v) { currentView = v; render(); } return; }
     if (act === 'goto-projects') { currentView = 'projects'; render(); return; }
     if (act === 'new-project') { return modalNewProject(); }
+    if (act === 'edit-project') { return modalEditProject(el.dataset.id); }
+    if (act === 'del-project') { return modalDelProject(el.dataset.id); }
     if (act === 'switch-project' || act === 'open-project') {
       Store.setActive(el.dataset.id); currentView = 'projects'; render(); toast('已切换项目', 'ok'); return;
     }
@@ -1890,6 +1933,54 @@ const Bridge = (() => {
       if (!name) { toast('请填写项目名称', 'err'); return; }
       Store.addProject(name, $('#mType').value);
       closeModal(); refresh(); render(); toast('项目已创建', 'ok');
+    };
+  }
+
+  const PROJECT_EMOJIS = ['📖','📰','💡','🏗️','🎬','🦍','🎭','📺','🎨','🧩','🎯','🚀'];
+  function modalEditProject(id) {
+    const target = db.projects.find(x => x.id === id);
+    if (!target) return;
+    const emojiRow = PROJECT_EMOJIS.map(e =>
+      `<button type="button" class="emoji-opt ${e === target.emoji ? 'sel' : ''}" data-act="pick-emoji" data-emoji="${e}" title="${e}">${e}</button>`).join('');
+    openModal('编辑项目', `
+      <div class="field"><label>项目名称</label><input class="input" id="mName" value="${esc(target.name)}"></div>
+      <div class="field"><label>素材类型</label><select class="select" id="mType">
+        <option value="novel" ${target.type === 'novel' ? 'selected' : ''}>小说改编</option>
+        <option value="news" ${target.type === 'news' ? 'selected' : ''}>新闻热点</option>
+        <option value="idea" ${target.type === 'idea' ? 'selected' : ''}>一句话创意</option></select></div>
+      <div class="field"><label>项目图标</label>
+        <input type="hidden" id="mEmoji" value="${esc(target.emoji || '📖')}">
+        <div class="emoji-grid" id="emojiGrid">${emojiRow}</div></div>`);
+    // 图标点选（就地切换选中态，不关闭弹窗）
+    $('#emojiGrid').onclick = ev => {
+      const b = ev.target.closest('[data-act="pick-emoji"]'); if (!b) return;
+      $$('.emoji-opt', $('#emojiGrid')).forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+      $('#mEmoji').value = b.dataset.emoji;
+    };
+    modalConfirm = () => {
+      const name = $('#mName').value.trim();
+      if (!name) { toast('项目名称不能为空', 'err'); return; }
+      Store.updateProject(id, { name, type: $('#mType').value, emoji: $('#mEmoji').value });
+      closeModal(); refresh(); render(); toast('项目已更新', 'ok');
+    };
+  }
+
+  function modalDelProject(id) {
+    const target = db.projects.find(x => x.id === id);
+    if (!target) return;
+    const isActive = Store.activeProject() && Store.activeProject().id === id;
+    const cnt = db.projects.length;
+    openModal('删除项目', `
+      <div class="danger-box">
+        <div class="danger-title">⚠️ 确认删除「${esc(target.name)}」？</div>
+        <div class="danger-desc">该项目的剧本、设定、分镜、生成任务与资产将一并删除，且无法撤销。</div>
+        ${cnt === 1 ? '<div class="danger-warn">这是最后一个项目，删除后项目台将为空。</div>' : ''}
+        ${isActive && cnt > 1 ? '<div class="danger-warn">这是当前正在使用的项目，删除后将自动切到另一个项目。</div>' : ''}
+      </div>`, `<button class="btn btn-ghost" data-mact="cancel">取消</button><button class="btn btn-danger" data-mact="confirm">确认删除</button>`);
+    modalConfirm = () => {
+      Store.deleteProject(id);
+      closeModal(); refresh(); render(); toast('项目已删除', 'ok');
     };
   }
 
