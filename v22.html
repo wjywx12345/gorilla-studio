@@ -1,0 +1,2292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>猩猩导演台 · 一站式短剧创作工作台</title>
+<style>
+/* ============================================================
+   猩猩导演台 · GORILLA STUDIO
+   深色专业创作台主题
+   ============================================================ */
+
+/* 兜底：hidden 属性必须胜过后面任何 display 规则（如 .modal-backdrop 的 display:grid） */
+[hidden]{display:none!important}
+
+:root{
+  --bg-0:#0d0f14;          /* 最底 */
+  --bg-1:#12151c;          /* 侧栏 */
+  --bg-2:#171b24;          /* 工作区 */
+  --bg-3:#1d222d;          /* 卡片 */
+  --bg-4:#242a37;          /* 卡片悬浮 / 输入 */
+  --bg-5:#2d3543;          /* 边框亮 */
+  --line:#252b37;          /* 分隔线 */
+  --line-soft:#1e242f;
+  --txt-0:#f2f4f8;         /* 主文字 */
+  --txt-1:#c2c9d6;         /* 次文字 */
+  --txt-2:#8b94a5;         /* 弱文字 */
+  --txt-3:#5d6675;         /* 更弱 */
+  --brand:#ff6b35;         /* 猩猩橙 */
+  --brand-2:#ff9d3d;       /* 橙黄 */
+  --brand-soft:rgba(255,107,53,.13);
+  --brand-line:rgba(255,107,53,.4);
+  --violet:#9b7bff;        /* 辅助紫 */
+  --teal:#3ecfb0;          /* 辅助青 */
+  --blue:#5aa9ff;          /* 辅助蓝 */
+  --red:#ff5d6c;
+  --yellow:#ffc94d;
+  --ok:#3ecfb0;
+  --warn:#ffc94d;
+  --err:#ff5d6c;
+  --radius:12px;
+  --radius-sm:8px;
+  --shadow:0 8px 30px rgba(0,0,0,.35);
+  --font:"PingFang SC","Microsoft YaHei","Segoe UI",-apple-system,BlinkMacSystemFont,sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--font);
+  background:var(--bg-0);
+  color:var(--txt-0);
+  font-size:13px;
+  line-height:1.5;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+::selection{background:var(--brand-soft);color:var(--brand-2)}
+
+/* 滚动条 */
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#2c3442;border-radius:6px;border:2px solid var(--bg-2)}
+::-webkit-scrollbar-thumb:hover{background:#3a4454}
+
+/* ============ 布局骨架 ============ */
+.app-shell{height:100vh;display:flex;flex-direction:column}
+.topbar{
+  height:60px;flex:none;display:flex;align-items:center;gap:16px;
+  padding:0 20px;background:var(--bg-1);border-bottom:1px solid var(--line);
+  z-index:30;
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:210px}
+.brand-mark{
+  width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:22px;
+  background:linear-gradient(135deg,var(--brand),var(--brand-2));
+  box-shadow:0 4px 14px rgba(255,107,53,.35);
+}
+.brand-text{line-height:1.15}
+.brand-name{font-size:15px;font-weight:700;letter-spacing:.5px}
+.brand-sub{font-size:9px;color:var(--txt-3);letter-spacing:1.6px;font-weight:600;margin-top:2px}
+
+.project-switcher{
+  position:relative;display:flex;align-items:center;gap:9px;
+  padding:8px 13px;background:var(--bg-3);border:1px solid var(--line);
+  border-radius:9px;cursor:pointer;min-width:220px;max-width:320px;
+  transition:border-color .15s;
+}
+.project-switcher:hover{border-color:var(--brand-line)}
+.ps-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);flex:none;box-shadow:0 0 8px var(--brand)}
+.ps-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.ps-caret{color:var(--txt-2);font-size:11px}
+.ps-menu{
+  display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;
+  background:var(--bg-3);border:1px solid var(--line-soft);border-radius:10px;
+  padding:6px;box-shadow:var(--shadow);z-index:50;max-height:340px;overflow:auto;
+}
+.ps-menu.open{display:block}
+.ps-menu-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:7px;cursor:pointer}
+.ps-menu-item:hover{background:var(--bg-4)}
+.ps-menu-item.active{background:var(--brand-soft)}
+.ps-menu-item .pmi-emoji{font-size:16px}
+.ps-menu-item .pmi-name{flex:1;font-weight:500}
+.ps-menu-item .pmi-check{color:var(--brand)}
+.ps-menu-sep{height:1px;background:var(--line);margin:5px 4px}
+
+.topbar-spacer{flex:1}
+.save-state{display:flex;align-items:center;gap:7px;color:var(--txt-2);font-size:12px}
+.ss-dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.save-state.saving .ss-dot{background:var(--warn);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.35}}
+.avatar{
+  width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(135deg,#ff8a5b,#c2410c);font-weight:700;color:#fff;
+  border:2px solid var(--bg-0);box-shadow:0 0 0 1px var(--line);
+}
+
+.main-row{flex:1;display:flex;min-height:0}
+
+/* ============ 侧栏 ============ */
+.sidebar{
+  width:220px;flex:none;background:var(--bg-1);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;padding:16px 10px 0;overflow:hidden;
+}
+.nav-section-label{
+  font-size:10px;color:var(--txt-3);letter-spacing:1.4px;font-weight:700;
+  padding:0 12px;margin:6px 0 8px;
+}
+.nav-list{list-style:none;display:flex;flex-direction:column;gap:2px}
+.nav-item{
+  display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;
+  color:var(--txt-1);cursor:pointer;position:relative;transition:background .14s,color .14s;
+  user-select:none;
+}
+.nav-item:hover{background:var(--bg-3);color:var(--txt-0)}
+.nav-item.active{background:var(--brand-soft);color:var(--brand-2);font-weight:600}
+.nav-item.active::before{
+  content:"";position:absolute;left:-10px;top:8px;bottom:8px;width:3px;
+  background:var(--brand);border-radius:0 3px 3px 0;
+}
+.nav-ico{width:20px;text-align:center;font-size:15px;opacity:.9}
+.nav-label{flex:1;font-size:13px}
+.nav-num{
+  font-size:10px;color:var(--txt-3);background:var(--bg-3);
+  min-width:20px;padding:1px 6px;border-radius:10px;text-align:center;
+}
+.nav-item.active .nav-num{background:rgba(255,107,53,.22);color:var(--brand-2)}
+
+.sidebar-foot{margin-top:auto;padding:12px 4px 14px}
+.pipe-mini{background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:12px}
+.pipe-mini-title{font-size:10px;color:var(--txt-3);letter-spacing:1px;font-weight:700;margin-bottom:10px}
+.pipe-steps{display:flex;align-items:center;gap:0}
+.pipe-step{display:flex;align-items:center;flex:1}
+.pipe-node{
+  width:15px;height:15px;border-radius:50%;border:2px solid var(--bg-5);flex:none;
+  display:grid;place-items:center;font-size:8px;color:transparent;transition:all .2s;
+}
+.pipe-node.done{background:var(--ok);border-color:var(--ok);color:#06251f}
+.pipe-node.current{background:var(--brand);border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.pipe-line{height:2px;background:var(--bg-5);flex:1}
+.pipe-line.done{background:var(--ok)}
+
+/* ============ 工作区 ============ */
+.workspace{flex:1;overflow:auto;background:var(--bg-2);position:relative}
+.view{padding:26px 30px 60px;max-width:1500px;margin:0 auto;animation:fadeUp .28s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.view-head{display:flex;align-items:flex-end;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.view-title{font-size:22px;font-weight:700;letter-spacing:.3px}
+.view-desc{color:var(--txt-2);font-size:12.5px;margin-top:4px;max-width:720px}
+.view-head-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+
+.eyebrow{font-size:10px;letter-spacing:1.6px;color:var(--brand);font-weight:800;text-transform:uppercase;margin-bottom:6px}
+
+/* ============ 通用组件 ============ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:9px 15px;border-radius:8px;border:1px solid transparent;
+  font-size:12.5px;font-weight:600;transition:all .15s;white-space:nowrap;
+}
+.btn-sm{padding:7px 11px;font-size:12px}
+.btn-xs{padding:5px 9px;font-size:11px;border-radius:6px}
+.btn-primary{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;box-shadow:0 3px 12px rgba(255,107,53,.28)}
+.btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn-ghost{background:var(--bg-3);color:var(--txt-1);border-color:var(--line)}
+.btn-ghost:hover{background:var(--bg-4);color:var(--txt-0);border-color:var(--bg-5)}
+.btn-outline{background:transparent;color:var(--brand-2);border-color:var(--brand-line)}
+.btn-outline:hover{background:var(--brand-soft)}
+.btn-danger{background:transparent;color:var(--err);border-color:rgba(255,93,108,.3)}
+.btn-danger:hover{background:rgba(255,93,108,.12)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;filter:none!important}
+
+.card{background:var(--bg-3);border:1px solid var(--line);border-radius:var(--radius)}
+.card-pad{padding:18px}
+.card-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.card-head h3{font-size:14px;font-weight:700}
+.card-head .sub{color:var(--txt-2);font-size:11px}
+.card-head .spacer{flex:1}
+
+.grid{display:grid;gap:16px}
+.g-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:1100px){.g-4{grid-template-columns:repeat(2,minmax(0,1fr))}.g-3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.g-2,.g-3,.g-4{grid-template-columns:1fr}}
+
+.tag{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:600;background:var(--bg-4);color:var(--txt-1)}
+.tag.brand{background:var(--brand-soft);color:var(--brand-2)}
+.tag.ok{background:rgba(62,207,176,.14);color:var(--teal)}
+.tag.warn{background:rgba(255,201,77,.14);color:var(--yellow)}
+.tag.err{background:rgba(255,93,108,.14);color:var(--err)}
+.tag.violet{background:rgba(155,123,255,.15);color:var(--violet)}
+.tag.blue{background:rgba(90,169,255,.14);color:var(--blue)}
+
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label{font-size:11.5px;color:var(--txt-2);font-weight:600}
+.field .hint{font-size:10.5px;color:var(--txt-3)}
+.input,.textarea,.select{
+  width:100%;background:var(--bg-4);border:1px solid var(--line);
+  border-radius:8px;padding:9px 12px;color:var(--txt-0);outline:none;transition:border-color .15s;
+}
+.input:focus,.textarea:focus,.select:focus{border-color:var(--brand-line)}
+.textarea{resize:vertical;min-height:90px;line-height:1.6}
+.select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%238b94a5'/></svg>");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px}
+
+.empty{
+  text-align:center;padding:60px 20px;color:var(--txt-2);
+  border:1px dashed var(--line);border-radius:var(--radius);background:var(--bg-3);
+}
+.empty .e-ico{font-size:44px;opacity:.45;margin-bottom:14px}
+.empty .e-title{font-size:15px;color:var(--txt-1);font-weight:600;margin-bottom:6px}
+.empty .e-desc{font-size:12px;margin-bottom:18px}
+
+.divider{height:1px;background:var(--line);margin:18px 0}
+
+/* ============ 项目台 ============ */
+.proj-card{
+  background:var(--bg-3);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;cursor:pointer;transition:all .18s;position:relative;
+}
+.proj-card:hover{transform:translateY(-3px);border-color:var(--brand-line);box-shadow:var(--shadow)}
+.proj-cover{
+  height:120px;display:flex;align-items:center;justify-content:center;font-size:46px;
+  position:relative;overflow:hidden;
+}
+.proj-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.25))}
+.proj-cover .pc-badge{position:absolute;top:12px;left:12px;z-index:2}
+.proj-body{padding:15px 16px 16px}
+.proj-name{font-size:14px;font-weight:700;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.proj-meta{font-size:11px;color:var(--txt-3);margin-bottom:13px}
+.proj-progress{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.progress-track{height:5px;background:var(--bg-5);border-radius:4px;flex:1;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--brand-2));border-radius:4px;transition:width .4s}
+.proj-progress .pct{font-size:10.5px;color:var(--txt-2);width:30px;text-align:right}
+.proj-foot{display:flex;gap:5px;flex-wrap:wrap;margin-top:12px}
+.proj-chip{font-size:10px;color:var(--txt-2);background:var(--bg-4);padding:3px 8px;border-radius:6px}
+.proj-chip-btn{cursor:pointer;transition:background .15s,color .15s,transform .15s}
+.proj-chip-btn:hover{background:var(--brand);color:#fff;transform:translateY(-1px)}
+/* 项目卡片右上角操作按钮 */
+.pc-ops{position:absolute;top:10px;right:10px;z-index:3;display:flex;gap:5px;opacity:.25;transition:opacity .15s}
+.proj-card:hover .pc-ops{opacity:1}
+.pc-op{width:26px;height:26px;border:none;border-radius:7px;background:rgba(0,0,0,.42);color:#fff;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .15s}
+.pc-op:hover{background:var(--brand);transform:translateY(-1px)}
+.pc-op-del:hover{background:#e5484d}
+/* 顶栏下拉项操作按钮 */
+.pmi-op{border:none;background:transparent;color:var(--txt-3);font-size:12px;width:22px;height:22px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}
+.pmi-op:hover{background:var(--bg-5);color:var(--brand)}
+.pmi-op-del:hover{background:#e5484d;color:#fff}
+/* 编辑弹窗：图标点选 */
+.emoji-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.emoji-opt{width:42px;height:42px;font-size:20px;border:1px solid var(--line);background:var(--bg-4);border-radius:9px;cursor:pointer;transition:all .15s}
+.emoji-opt:hover{border-color:var(--brand-line);transform:translateY(-2px)}
+.emoji-opt.sel{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 2px var(--brand-soft)}
+/* 删除确认危险提示 */
+.danger-box{border:1px solid rgba(229,72,77,.4);background:rgba(229,72,77,.07);border-radius:10px;padding:16px}
+.danger-title{font-weight:700;color:#ff7b7f;font-size:14px;margin-bottom:8px}
+.danger-desc{font-size:12px;color:var(--txt-2);line-height:1.7}
+.danger-warn{font-size:11.5px;color:var(--warn);margin-top:10px}
+
+/* 统计条 */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+@media(max-width:760px){.stat-row{grid-template-columns:repeat(2,1fr)}}
+.stat-box{background:var(--bg-3);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;position:relative;transition:.15s}
+.stat-box[data-act]{cursor:pointer}
+.stat-box[data-act]:hover{border-color:var(--brand);background:var(--bg-4);transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.stat-go{position:absolute;right:12px;bottom:12px;font-size:10px;color:var(--brand-2);opacity:0;transition:.15s}
+.stat-box[data-act]:hover .stat-go{opacity:1}
+.stat-label{font-size:11px;color:var(--txt-2);margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.stat-val{font-size:26px;font-weight:800;line-height:1}
+.stat-val small{font-size:12px;color:var(--txt-3);font-weight:500;margin-left:4px}
+.stat-ico{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:14px}
+
+/* ============ 剧本工坊 ============ */
+.script-layout{display:grid;grid-template-columns:minmax(320px,.85fr) minmax(0,1.15fr);gap:18px;align-items:start}
+@media(max-width:1000px){.script-layout{grid-template-columns:1fr}}
+.source-area{width:100%;min-height:420px;font-family:var(--font)}
+.script-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.scene-block{
+  background:var(--bg-4);border:1px solid var(--line);border-left:3px solid var(--brand);
+  border-radius:0 8px 8px 0;padding:12px 14px;margin-bottom:12px;
+}
+.scene-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.scene-id{font-size:10px;font-weight:800;color:var(--brand-2);letter-spacing:.5px}
+.scene-loc{color:var(--txt-2);font-size:11px}
+.scene-text{white-space:pre-wrap;color:var(--txt-1);font-size:12.5px;line-height:1.75}
+.dialog-line{color:var(--txt-0)}
+.dialog-line .who{color:var(--brand-2);font-weight:600}
+
+.metric-inline{display:flex;gap:18px;flex-wrap:wrap;padding:12px 16px;background:var(--bg-3);border:1px solid var(--line);border-radius:10px;margin-bottom:16px}
+.metric{display:flex;flex-direction:column;gap:2px}
+.metric .m-lab{font-size:10px;color:var(--txt-3);letter-spacing:.5px}
+.metric .m-val{font-size:17px;font-weight:700}
+.metric .m-val.warn{color:var(--warn)}
+
+/* ============ 设定中枢 ============ */
+.char-card{background:var(--bg-3);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:border-color .15s}
+.char-card:hover{border-color:var(--bg-5)}
+.char-views{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--line)}
+.view-slot{aspect-ratio:3/4;background:linear-gradient(160deg,#202634,#171b24);display:grid;place-items:center;position:relative;overflow:hidden}
+.view-slot .vs-figure{font-size:44px;filter:grayscale(.3);opacity:.85}
+.view-slot .vs-label{position:absolute;bottom:5px;left:0;right:0;text-align:center;font-size:9px;color:var(--txt-3);background:rgba(0,0,0,.35);padding:2px 0}
+.view-slot.empty-vs{border:1px dashed var(--bg-5);background:var(--bg-2)}
+.view-slot.empty-vs .vs-figure{font-size:22px;opacity:.35}
+.char-info{padding:13px 15px}
+.char-name{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.char-role{font-size:11px;color:var(--brand-2);margin-bottom:8px}
+.char-desc{font-size:11.5px;color:var(--txt-2);line-height:1.6;margin-bottom:10px;min-height:36px}
+.char-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:11px}
+.char-actions{display:flex;gap:6px}
+.prompt-box{background:var(--bg-2);border:1px solid var(--line-soft);border-radius:6px;padding:8px 10px;font-size:10.5px;color:var(--txt-3);line-height:1.5;font-family:monospace;max-height:60px;overflow:auto;margin-bottom:10px}
+
+/* ============ 分镜台 ============ */
+.shot-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.shot-row{
+  background:var(--bg-3);border:1px solid var(--line);border-radius:10px;
+  display:grid;grid-template-columns:64px 1fr;overflow:hidden;transition:border-color .15s;
+}
+.shot-row:hover{border-color:var(--bg-5)}
+.shot-no{
+  background:var(--bg-4);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;border-right:1px solid var(--line);padding:10px 4px;
+}
+.shot-no .sn-id{font-size:10px;color:var(--brand-2);font-weight:700}
+.shot-no .sn-dur{font-size:15px;font-weight:800;margin-top:3px}
+.shot-no .sn-dur small{font-size:9px;color:var(--txt-3);font-weight:500}
+.shot-main{padding:12px 15px;min-width:0}
+.shot-top{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}
+.shot-title{font-weight:700;font-size:13px}
+.shot-tagline{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.shot-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 18px;font-size:11.5px}
+@media(max-width:700px){.shot-grid{grid-template-columns:1fr}}
+.shot-field{display:flex;gap:7px;min-width:0}
+.shot-field .sf-k{color:var(--txt-3);flex:none;width:46px}
+.shot-field .sf-v{color:var(--txt-1);line-height:1.5}
+.shot-actions{display:flex;gap:6px;margin-top:10px}
+
+.summary-bar{
+  background:linear-gradient(135deg,var(--bg-3),var(--bg-4));
+  border:1px solid var(--brand-line);border-radius:12px;padding:16px 20px;
+  display:flex;align-items:center;gap:26px;flex-wrap:wrap;margin-bottom:18px;
+}
+.sum-item{display:flex;flex-direction:column;gap:2px}
+.sum-item .si-lab{font-size:10px;color:var(--txt-3);letter-spacing:.5px}
+.sum-item .si-val{font-size:19px;font-weight:800}
+.sum-item .si-val.brand{color:var(--brand-2)}
+
+/* ============ 生成工场 ============ */
+.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start}
+@media(max-width:900px){.kanban{grid-template-columns:1fr}}
+.kb-col{background:var(--bg-3);border:1px solid var(--line);border-radius:var(--radius);padding:14px;min-height:220px}
+.kb-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.kb-dot{width:8px;height:8px;border-radius:50%}
+.kb-title{font-weight:700;font-size:12.5px}
+.kb-count{margin-left:auto;font-size:10px;color:var(--txt-3);background:var(--bg-4);padding:2px 7px;border-radius:10px}
+.gen-card{background:var(--bg-4);border:1px solid var(--line);border-radius:9px;padding:12px;margin-bottom:10px}
+.gen-card-top{display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.gen-thumb{width:38px;height:38px;border-radius:7px;background:linear-gradient(135deg,#2a3342,#1a202b);display:grid;place-items:center;font-size:17px;flex:none}
+.gen-name{font-size:11.5px;font-weight:600;line-height:1.3}
+.gen-sub{font-size:10px;color:var(--txt-3);margin-top:2px}
+.gen-prompt{font-size:10.5px;color:var(--txt-2);line-height:1.5;margin:8px 0;max-height:44px;overflow:hidden}
+.gen-bar{height:4px;background:var(--bg-5);border-radius:3px;overflow:hidden;margin-top:8px}
+.gen-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand-2));transition:width .4s}
+.gen-actions{display:flex;gap:6px;margin-top:9px}
+
+/* ============ 剪辑台 ============ */
+.player{
+  aspect-ratio:16/9;background:#000;border-radius:12px;border:1px solid var(--line);
+  display:grid;place-items:center;position:relative;overflow:hidden;max-height:440px;margin:0 auto;
+}
+.player-inner{text-align:center;color:var(--txt-3)}
+.player-inner .pl-ico{font-size:52px;opacity:.3;margin-bottom:8px}
+.player-frame{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(135deg,#1a2130,#0d1017)}
+.player-frame .pf-emoji{font-size:80px;opacity:.5}
+.player-overlay{position:absolute;bottom:14px;left:16px;right:16px;display:flex;align-items:center;gap:12px;color:#fff}
+.play-btn{
+  width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.15);
+  backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.25);display:grid;place-items:center;font-size:16px;
+}
+.play-btn:hover{background:var(--brand)}
+.time-read{font-size:11px;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.85)}
+
+.timeline{background:var(--bg-3);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:16px;overflow-x:auto}
+.tl-ruler{display:flex;margin-left:96px;border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:10px}
+.tl-tick{font-size:9px;color:var(--txt-3);flex:none;text-align:left}
+.tl-track{display:flex;align-items:center;gap:0;margin-bottom:8px}
+.tl-label{width:96px;flex:none;font-size:10.5px;color:var(--txt-2);display:flex;align-items:center;gap:6px}
+.tl-label .tl-ico{font-size:13px}
+.tl-clips{display:flex;gap:3px;flex:1;min-height:52px}
+.tl-clip{
+  flex:none;border-radius:6px;padding:6px 8px;min-width:60px;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:space-between;cursor:grab;
+  border:1px solid rgba(255,255,255,.12);transition:transform .12s,box-shadow .12s;
+}
+.tl-clip:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.4);z-index:2}
+.tl-clip.selected{outline:2px solid var(--brand);outline-offset:-2px}
+.tl-clip .tc-name{font-size:9.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-clip .tc-dur{font-size:9px;opacity:.8}
+.tl-clip .tc-trans{position:absolute;left:0;top:0;bottom:0;width:5px;background:rgba(255,255,255,.35)}
+
+/* ============ 导出中心 ============ */
+.export-layout{display:grid;grid-template-columns:minmax(300px,.8fr) minmax(0,1.2fr);gap:18px;align-items:start}
+@media(max-width:1000px){.export-layout{grid-template-columns:1fr}}
+.exp-preview{aspect-ratio:16/9;background:linear-gradient(135deg,#1a2130,#0d1017);border-radius:12px;border:1px solid var(--line);display:grid;place-items:center;margin-bottom:14px;position:relative}
+.exp-preview .ep-badge{position:absolute;top:12px;right:12px}
+.exp-record{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg-4);border:1px solid var(--line);border-radius:9px;margin-bottom:9px}
+.exp-rec-ico{width:38px;height:38px;border-radius:8px;background:var(--bg-5);display:grid;place-items:center;font-size:16px}
+.exp-rec-main{flex:1;min-width:0}
+.exp-rec-name{font-weight:600;font-size:12.5px}
+.exp-rec-meta{font-size:10.5px;color:var(--txt-3);margin-top:2px}
+
+/* ============ 资产库 ============ */
+.asset-tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+.asset-tab{padding:9px 16px;cursor:pointer;color:var(--txt-2);font-weight:600;font-size:12.5px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.asset-tab:hover{color:var(--txt-0)}
+.asset-tab.active{color:var(--brand-2);border-bottom-color:var(--brand)}
+.asset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.asset-card{background:var(--bg-3);border:1px solid var(--line);border-radius:10px;overflow:hidden;transition:transform .15s,border-color .15s}
+.asset-card:hover{transform:translateY(-2px);border-color:var(--brand-line)}
+.asset-thumb{aspect-ratio:16/10;background:linear-gradient(135deg,#232b3a,#151922);display:grid;place-items:center;font-size:38px;position:relative}
+.asset-thumb .at-type{position:absolute;top:8px;left:8px}
+.asset-meta{padding:10px 12px}
+.asset-name{font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.asset-sub{font-size:10px;color:var(--txt-3);margin-top:3px}
+
+/* ============ 弹窗 ============ */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);z-index:100;display:grid;place-items:center;padding:20px}
+.modal{width:min(560px,100%);max-height:88vh;background:var(--bg-3);border:1px solid var(--bg-5);border-radius:14px;box-shadow:var(--shadow);display:flex;flex-direction:column;animation:modalIn .22s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
+.modal.wide{width:min(860px,100%)}
+.modal-head{display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+.modal-title{font-size:15px;font-weight:700;flex:1}
+.modal-close{background:none;border:none;color:var(--txt-2);font-size:16px;padding:4px 8px;border-radius:6px}
+.modal-close:hover{background:var(--bg-4);color:var(--txt-0)}
+.modal-body{padding:20px;overflow:auto}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+
+/* ============ Toast ============ */
+.toast-wrap{position:fixed;bottom:24px;right:24px;z-index:200;display:flex;flex-direction:column;gap:9px}
+.toast{
+  background:var(--bg-4);border:1px solid var(--line);border-left:3px solid var(--ok);
+  border-radius:9px;padding:11px 16px;box-shadow:var(--shadow);font-size:12.5px;
+  display:flex;align-items:center;gap:9px;animation:toastIn .25s ease;min-width:220px;
+}
+.toast.err{border-left-color:var(--err)}
+.toast.warn{border-left-color:var(--warn)}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+.toast .t-ico{font-size:15px}
+
+/* 遮罩内小工具 */
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.inline-input{display:flex;gap:8px}
+.inline-input .input{flex:1}
+.mini-note{font-size:10.5px;color:var(--txt-3);margin-top:6px;line-height:1.5}
+.code-hint{font-family:monospace;font-size:10px;color:var(--txt-3);background:var(--bg-2);padding:2px 5px;border-radius:4px}
+
+/* ============ 一键导入桥 / 真 AI（新增） ============ */
+.bridge-strip{
+  margin-top:14px;padding:13px 14px;border:1px dashed var(--brand-line);
+  background:var(--brand-soft);border-radius:var(--radius-sm);
+}
+.bridge-strip-title{font-size:12px;font-weight:700;color:var(--brand-2);margin-bottom:5px}
+.bridge-strip-desc{font-size:10.5px;color:var(--txt-2);line-height:1.6;margin-bottom:10px}
+
+.bridge-drop{
+  border:1.5px dashed var(--line);border-radius:var(--radius-sm);
+  padding:24px 16px;text-align:center;background:var(--bg-2);transition:.15s;
+}
+.bridge-drop.drag{border-color:var(--brand);background:var(--brand-soft)}
+.bd-ico{font-size:30px;margin-bottom:8px}
+.bd-title{font-size:13px;font-weight:600;color:var(--txt-0);margin-bottom:5px}
+.bd-desc{font-size:10.5px;color:var(--txt-3);line-height:1.6;margin-bottom:12px}
+
+.ai-progress{text-align:center;padding:8px 0}
+.ai-spinner{
+  width:38px;height:38px;margin:0 auto 16px;border-radius:50%;
+  border:3px solid var(--bg-4);border-top-color:var(--brand);
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ai-progress-title{font-size:14px;font-weight:600;color:var(--txt-0);margin-bottom:6px}
+.ai-progress-note{font-size:11px;color:var(--txt-3);line-height:1.6;margin-bottom:14px}
+.ai-stream{
+  text-align:left;max-height:190px;overflow:auto;white-space:pre-wrap;word-break:break-all;
+  font-family:monospace;font-size:10.5px;line-height:1.6;color:var(--txt-2);
+  background:var(--bg-0);border:1px solid var(--line);border-radius:8px;padding:12px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- 顶栏 -->
+  <header class="topbar">
+    <div class="brand" id="brand">
+      <div class="brand-mark">🦍</div>
+      <div class="brand-text">
+        <div class="brand-name">猩猩导演台</div>
+        <div class="brand-sub">GORILLA STUDIO</div>
+      </div>
+    </div>
+
+    <div class="project-switcher" id="projectSwitcher" title="切换项目">
+      <span class="ps-dot"></span>
+      <span class="ps-name" id="psName">—</span>
+      <span class="ps-caret">▾</span>
+      <div class="ps-menu" id="psMenu"></div>
+    </div>
+
+    <div class="topbar-spacer"></div>
+
+    <div class="save-state" id="saveState"><span class="ss-dot"></span><span id="ssText">已保存</span></div>
+    <span title="页面版本 v2.2 · 若图标点不开说明缓存未更新" style="font-size:10px;color:var(--txt-3);font-family:monospace;padding:0 4px">v2.2</span>
+    <button class="btn btn-ghost btn-sm" id="btnExportData" title="把全部项目数据导出为 JSON 备份">备份</button>
+    <button class="btn btn-ghost btn-sm" id="btnImportData" title="从 JSON 备份恢复数据">恢复</button>
+    <input type="file" id="importFile" accept="application/json" hidden>
+    <div class="avatar" title="创作者">猩</div>
+  </header>
+
+  <!-- 主体 -->
+  <div class="main-row">
+
+    <!-- 左侧导航 -->
+    <nav class="sidebar">
+      <div class="nav-section-label">创作流水线</div>
+      <ul class="nav-list" id="navList">
+        <li class="nav-item" data-view="projects">
+          <span class="nav-ico">▦</span><span class="nav-label">项目台</span><span class="nav-num" id="numProjects"></span>
+        </li>
+        <li class="nav-item" data-view="script">
+          <span class="nav-ico">✎</span><span class="nav-label">剧本工坊</span>
+        </li>
+        <li class="nav-item" data-view="setup">
+          <span class="nav-ico">◈</span><span class="nav-label">设定中枢</span><span class="nav-num" id="numSetup"></span>
+        </li>
+        <li class="nav-item" data-view="storyboard">
+          <span class="nav-ico">▤</span><span class="nav-label">分镜台</span><span class="nav-num" id="numShots"></span>
+        </li>
+        <li class="nav-item" data-view="generate">
+          <span class="nav-ico">✦</span><span class="nav-label">生成工场</span><span class="nav-num" id="numTasks"></span>
+        </li>
+        <li class="nav-item" data-view="edit">
+          <span class="nav-ico">⏱</span><span class="nav-label">剪辑台</span>
+        </li>
+        <li class="nav-item" data-view="export">
+          <span class="nav-ico">⇩</span><span class="nav-label">导出中心</span>
+        </li>
+      </ul>
+
+      <div class="nav-section-label">资源</div>
+      <ul class="nav-list">
+        <li class="nav-item" data-view="assets">
+          <span class="nav-ico">▣</span><span class="nav-label">资产库</span><span class="nav-num" id="numAssets"></span>
+        </li>
+      </ul>
+
+      <div class="sidebar-foot">
+        <div class="pipe-mini">
+          <div class="pipe-mini-title">当前进度</div>
+          <div class="pipe-steps" id="pipeSteps"></div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 工作区 -->
+    <main class="workspace" id="workspace">
+      <!-- 由 app.js 渲染 -->
+    </main>
+
+  </div>
+</div>
+
+<!-- 弹窗容器 -->
+<div class="modal-backdrop" id="modalBackdrop" hidden style="display:none">
+  <div class="modal" id="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle">标题</div>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<!-- 提示容器 -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- 云服务 SDK（真 AI · 免密钥 LLM） -->
+<script>
+var WorkBuddyCloud=(()=>{var ie=Object.defineProperty;var _t=Object.getOwnPropertyDescriptor;var Tt=Object.getOwnPropertyNames;var Ot=Object.prototype.hasOwnProperty;var a=(r,e)=>ie(r,"name",{value:e,configurable:!0});var At=(r,e)=>{for(var t in e)ie(r,t,{get:e[t],enumerable:!0})},Rt=(r,e,t,s)=>{if(e&&typeof e=="object"||typeof e=="function")for(let n of Tt(e))!Ot.call(r,n)&&n!==t&&ie(r,n,{get:()=>e[n],enumerable:!(s=_t(e,n))||s.enumerable});return r};var $t=r=>Rt(ie({},"__esModule",{value:!0}),r);var nr={};At(nr,{AuthModule:()=>D,CLOUD_MODULE_PATHS:()=>R,CLOUD_PATH_PREFIX:()=>j,CloudOpenAIError:()=>x,CloudStoragePathError:()=>w,DEFAULT_SIGNED_URL_TTL_SECONDS:()=>ge,LlmModule:()=>M,MAX_SIGNED_URL_TTL_SECONDS:()=>ye,PUBLISHABLE_KEY_HEADER:()=>be,RUNTIME_STORAGE_BUCKET:()=>W,WorkBuddyCloudClient:()=>se,WorkBuddyCloudConfigError:()=>T,WorkBuddyDatabaseModule:()=>J,WorkBuddyStorageBucket:()=>H,WorkBuddyStorageDownload:()=>te,WorkBuddyStorageModule:()=>re,anonymousTokenProvider:()=>oe,createMemoryStorage:()=>ke,createWorkBuddyCloud:()=>vt,getModelCapability:()=>Oe,getModelDisplayName:()=>Te,shouldClearCredentials:()=>Pt});var T=class extends Error{static{a(this,"WorkBuddyCloudConfigError")}constructor(e){super(e),this.name="WorkBuddyCloudConfigError"}};var Ut=/^wbpk_/;function Le(r,e){if(typeof r!="string"||r.trim()==="")throw new T(`${e} is required and must be a non-empty string.`);let t=r.trim(),s;try{s=new URL(t)}catch{throw new T(`${e} must be an absolute URL, received: ${t}`)}if(s.protocol!=="https:"&&s.protocol!=="http:")throw new T(`${e} must use http(s), received protocol: ${s.protocol}`);return t.replace(/\/+$/,"")}a(Le,"normalizeHttpUrl");function It(r){if(r!=null&&r!=="")return Le(r,"endpoint");let e=globalThis.location?.origin;if(typeof e!="string"||e==="")throw new T("endpoint is required outside browsers (no location.origin to fall back to).");return e.replace(/\/+$/,"")}a(It,"resolveEndpoint");function Ct(r){if(typeof r!="string"||r.trim()==="")throw new T("publishableKey is required and must be a non-empty string.");let e=r.trim();if(!Ut.test(e))throw new T('publishableKey must start with "wbpk_".');return e}a(Ct,"normalizePublishableKey");function Lt(r){if(r)return r;if(typeof globalThis.fetch!="function")throw new T("Global fetch is unavailable in this runtime; pass options.fetch explicitly.");return globalThis.fetch.bind(globalThis)}a(Lt,"resolveFetch");function je(r){if(!r||typeof r!="object")throw new T("createWorkBuddyCloud requires publishableKey.");return Object.freeze({endpoint:It(r.endpoint),oauthRelayBaseUrl:r.oauthRelayBaseUrl?Le(r.oauthRelayBaseUrl,"oauthRelayBaseUrl"):"",publishableKey:Ct(r.publishableKey),fetch:Lt(r.fetch)})}a(je,"resolveRuntimeConfig");var be="x-wb-webapp-access-key";function we(r,e){return async(t,s)=>{let n=new Headers(s?.headers);if(n.set(be,r.publishableKey),!n.has("Authorization")){let i=await e();i&&n.set("Authorization",`Bearer ${i}`)}return r.fetch(t,{...s,headers:n})}}a(we,"createCloudFetch");var oe=a(()=>Promise.resolve(void 0),"anonymousTokenProvider");var j="/.cloud",R=Object.freeze({auth:`${j}/auth`,database:`${j}/database/rest`,storage:`${j}/storage`,llm:`${j}/llm`});var jt="workbuddy-cloud.pkce.workbuddy.",Bt="workbuddy-cloud.pkce-done.workbuddy.";function Be(r){let e="";for(let t of r)e+=String.fromCharCode(t);return btoa(e).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}a(Be,"base64UrlEncode");function De(){let r=globalThis.crypto;return typeof r?.getRandomValues=="function"&&typeof r?.subtle?.digest=="function"&&typeof globalThis.btoa=="function"}a(De,"hasWebCrypto");function Ne(){let r=new Uint8Array(32);return globalThis.crypto.getRandomValues(r),Be(r)}a(Ne,"createCodeVerifier");async function Me(r){let e=new TextEncoder().encode(r),t=await globalThis.crypto.subtle.digest("SHA-256",e);return Be(new Uint8Array(t))}a(Me,"computeS256Challenge");var ae=class{static{a(this,"WorkBuddyPkceStore")}verifierKey;consumedKey;constructor(e){this.verifierKey=jt+e,this.consumedKey=Bt+e}usable(){let e=this.storage();if(!e)return!1;try{let t=`${this.verifierKey}.probe`;return e.setItem(t,"1"),e.removeItem(t),!0}catch{return!1}}saveVerifier(e){try{let t=this.storage();return t?(t.setItem(this.verifierKey,e),t.removeItem(this.consumedKey),!0):!1}catch{return!1}}readVerifier(){try{return this.storage()?.getItem(this.verifierKey)??null}catch{return null}}clearVerifier(){try{this.storage()?.removeItem(this.verifierKey)}catch{}}markConsumed(e){try{this.storage()?.setItem(this.consumedKey,e)}catch{}}isConsumed(e){try{return!!e&&this.storage()?.getItem(this.consumedKey)===e}catch{return!1}}storage(){try{return globalThis.sessionStorage??null}catch{return null}}};var b={signUp:"/v1/signup",signIn:"/v1/signin",signInWithProvider:"/v1/signin/with/provider",token:"/v1/token",loginWechat:"/v1/login-wechat",loginWechatWeb:"/v1/login-wechat-web",loginWorkBuddy:"/v1/login-workbuddy",loginWorkBuddyMiniProgram:"/v1/login-workbuddy-miniprogram",signOut:"/v1/user/signout",userMe:"/v1/user/me",verification:"/v1/verification",verificationVerify:"/v1/verification/verify",resetPassword:"/v1/reset",sudo:"/v1/user/sudo",userPassword:"/v1/user/password"};function Se(r,e){let t=r??{},s=typeof t.access_token=="string"?t.access_token:"";if(!s)throw Mt("response has no access_token");let n=typeof t.refresh_token=="string"?t.refresh_token:"",i=typeof t.expires_in=="number"?t.expires_in:0;return{accessToken:s,refreshToken:n,expiresAt:e+i*1e3,user:Dt(t)}}a(Se,"parseSession");function Dt(r){let e=r.is_anonymous===!0;return{id:typeof r.sub=="string"?r.sub:"",name:O(r.name),avatarUrl:O(r.avatar_url),isAnonymous:e,raw:r}}a(Dt,"userFromSessionPayload");function Fe(r){let e=r??{},t=typeof e.sub=="string"?e.sub:typeof e.uid=="string"?e.uid:"",s=e.user_metadata??{};return{id:t,email:O(e.email)??O(s.email),phone:O(e.phone_number)??O(e.phone),name:O(e.name),avatarUrl:O(e.avatar_url),isAnonymous:e.is_anonymous===!0||e.scope==="anonymous",raw:e}}a(Fe,"parseUser");function O(r){return typeof r=="string"&&r!==""?r:void 0}a(O,"pickString");function qe(r,e){let t=e??{},s=typeof t.error=="string"?t.error:void 0,n=O(t.error_description)??O(t.message)??O(t.msg)??`HTTP ${r}`;return{kind:Nt(r,s),message:n,status:r,code:s,cause:e}}a(qe,"normalizeHttpError");function Nt(r,e){if(e==="invalid_grant")return"unauthenticated";switch(r){case 400:return"invalid-request";case 401:return"unauthenticated";case 403:return"permission-denied";case 404:return"not-found";case 429:return"rate-limited";case 501:return"unimplemented";case 503:return"backend-unavailable";default:return r>=500?"backend-unavailable":"unknown"}}a(Nt,"errorKind");function K(r){return{kind:"network",message:`request failed before a response was received: ${r instanceof Error?r.message:String(r)}`,status:0,cause:r}}a(K,"normalizeNetworkError");function Mt(r){let e=new Error(`workbuddy-cloud auth: ${r}`);return e.kind="unknown",e.status=0,e}a(Mt,"sessionShapeError");var ce=class{static{a(this,"SessionManager")}store;refresh;emit;isCredentialsRejected;now;inflight=null;signOutEpoch=0;lastFailure=null;constructor(e){this.store=e.store,this.refresh=e.refresh,this.emit=e.emit,this.isCredentialsRejected=e.isCredentialsRejected,this.now=e.now??Date.now}peek(){return this.store.read()}async ensure(){let e=this.store.read();return e?this.isExpiring(e)?e.refreshToken?this.refreshOnce(e):this.abandon():e:null}async forceRefresh(){let e=this.store.read();return e?.refreshToken?this.refreshOnce(e,{ignoreCooldown:!0}):null}commitSignIn(e){return this.lastFailure=null,this.store.write(e),this.emit("SIGNED_IN",e),e}commitUserUpdate(e){return this.store.write(e),this.emit("USER_UPDATED",e),e}clear(){this.signOutEpoch+=1,this.lastFailure=null,this.inflight=null,this.store.clear(),this.emit("SIGNED_OUT",null)}isExpiring(e){return typeof e.expiresAt!="number"?!0:e.expiresAt-this.now()<9e4}refreshOnce(e,t={}){if(this.inflight)return this.inflight;if(!t.ignoreCooldown&&this.inCooldown(e.refreshToken))return Promise.resolve(null);let s=this.doRefresh(e).finally(()=>{this.inflight=null});return this.inflight=s,s}inCooldown(e){let t=this.lastFailure;return t!==null&&t.token===e&&this.now()-t.at<6e4}async doRefresh(e){let t=this.signOutEpoch,s=e.refreshToken,n;try{n=await this.refresh(s)}catch(o){return this.onRefreshFailed(s,o)}if(this.signOutEpoch!==t)return this.store.clear(),null;let i=this.store.read();return i&&i.refreshToken!==s?i:(this.lastFailure=null,this.store.write(n),this.emit("TOKEN_REFRESHED",n),n)}onRefreshFailed(e,t){return this.isCredentialsRejected(t)?this.abandon():(this.lastFailure={token:e,at:this.now()},null)}abandon(){return this.store.clear(),this.lastFailure=null,this.emit("SIGNED_OUT",null),null}};var Ft="workbuddy-cloud.session.";function ke(){let r=new Map;return{getItem:a(e=>r.get(e)??null,"getItem"),setItem:a((e,t)=>{r.set(e,t)},"setItem"),removeItem:a(e=>{r.delete(e)},"removeItem")}}a(ke,"createMemoryStorage");function We(r){if(r)return r;try{let e="__workbuddy_probe__";return globalThis.localStorage.setItem(e,"1"),globalThis.localStorage.removeItem(e),globalThis.localStorage}catch{return ke()}}a(We,"resolveStorage");var ue=class{static{a(this,"SessionStore")}storage;key;constructor(e,t){this.storage=e,this.key=Ft+t}read(){let e;try{e=this.storage.getItem(this.key)}catch{return null}if(!e)return null;try{let t=JSON.parse(e);return qt(t)?t:this.discard()}catch{return this.discard()}}write(e){try{this.storage.setItem(this.key,JSON.stringify(e))}catch{}}clear(){try{this.storage.removeItem(this.key)}catch{}}discard(){return this.clear(),null}};function qt(r){if(!r||typeof r!="object")return!1;let e=r;return typeof e.accessToken=="string"&&e.accessToken!==""&&typeof e.refreshToken=="string"&&typeof e.expiresAt=="number"&&!!e.user&&typeof e.user=="object"}a(qt,"isStoredSession");function B(r,e){let t=r.email??"",s=r.phone??"";return!!t==!!s?{data:null,error:{kind:"invalid-request",message:`${e} requires exactly one of email or phone`,status:0}}:{data:t?{kind:"email",value:t,username:t}:{kind:"phone",value:s,username:Wt(s)},error:null}}a(B,"resolveAuthIdentifier");function Wt(r){let t=r.replace(/\D/g,"");return t.startsWith("0086")?t=t.slice(4):t.startsWith("86")&&t.length===13&&(t=t.slice(2)),/^1\d{10}$/.test(t)?`+86 ${t}`:r}a(Wt,"normalizePhone");var He="wx907c65e5e107ddcf",Ht="subpackages/secondary/oauth-authorize/index";var de=class{static{a(this,"WorkBuddyMiniProgramAuth")}storage;platform;exchange;key;starting;exchanges=new Map;constructor(e,t,s,n){this.storage=t,this.platform=s,this.exchange=n,this.key=`workbuddy-cloud.miniprogram-workbuddy.${e}`}async signIn(e){if(this.starting)return this.starting;let t=this.start(e);this.starting=t;try{return await t}finally{this.starting=void 0}}async start(e){if(typeof e?.redirectPath!="string"||!e.redirectPath.trim())return P("invalid_request","WorkBuddy login requires redirectPath");let t=this.platform.applicationId;if(typeof t!="string"||!t.trim())return P("invalid_request","WorkBuddy login requires publicConfig.workBuddyOAuthClientId");try{let s=this.platform.getEnvVersion?.(),n=await this.platform.createState(),i={state:n,appId:He,expiresAt:Date.now()+6e5},o=JSON.stringify(i);if(this.storage.setItem(this.key,o),this.storage.getItem(this.key)!==o)return P("storage_unavailable","Could not persist WorkBuddy login; sign in again");let c=await this.platform.navigate({appId:He,path:`${Ht}?client_id=${encodeURIComponent(t)}&redirect_uri=${encodeURIComponent(e.redirectPath)}&state=${encodeURIComponent(n)}`+(s?`&envVersion=${s}`:""),envVersion:"release"});return c.error&&this.storage.removeItem(this.key),c}catch(s){return P("miniprogram_login_failed",xe(s))}}async handleCallback(e){let t=e?.referrerInfo,s=Ke(t?.extraData);if(!s||!s.code&&!s.error)return{data:null,error:null};let n=typeof s.state=="string"?this.exchanges.get(s.state):void 0;if(n)return t?.appId===n.appId?n.task:P("invalid_request","WorkBuddy callback does not match the login source");let i;try{i=this.readPending()}catch(c){return P("storage_unavailable",xe(c))}if(!i)return{data:null,error:null};if(typeof s.state!="string"||!s.state)return P("invalid_request","WorkBuddy callback requires state");if(t?.appId!==i.appId||s.state!==i.state)return P("invalid_request","WorkBuddy callback does not match the login source or state");if(!(typeof s.code=="string"&&s.code)&&!(typeof s.error=="string"&&s.error))return P("invalid_request","WorkBuddy callback has no authorization code");if(!s.error&&(typeof s.redirect_uri!="string"||!s.redirect_uri.trim()))return P("invalid_request","WorkBuddy callback requires redirect_uri");try{if(this.storage.removeItem(this.key),this.storage.getItem(this.key)!==null)return P("storage_unavailable","Could not consume WorkBuddy login; sign in again")}catch(c){return P("storage_unavailable",xe(c))}if(i.expiresAt<=Date.now())return P("invalid_grant","WorkBuddy login expired; sign in again","unauthenticated");if(s.error)return P(String(s.error),typeof s.error_description=="string"?s.error_description:"WorkBuddy authorization was not completed","permission-denied");let o=this.exchange({code:s.code,state:i.state,shortlink:s.redirect_uri});this.exchanges.set(i.state,{appId:i.appId,task:o});try{return await o}finally{this.exchanges.delete(i.state)}}readPending(){let e=this.storage.getItem(this.key);if(!e)return null;let t=Ke(JSON.parse(e));if(!t||typeof t.state!="string"||typeof t.appId!="string"||typeof t.expiresAt!="number")throw new Error("Invalid saved WorkBuddy login; sign in again");return t}};function Ke(r){return r!==null&&typeof r=="object"&&!Array.isArray(r)?r:null}a(Ke,"record");function P(r,e,t="invalid-request"){return{data:null,error:{kind:t,code:r,message:e,status:0}}}a(P,"failure");function xe(r){return r instanceof Error?r.message:String(r)}a(xe,"describe");var Ge=200;function Je(r,e){let t=Array.from(r);return t.length<=e?r:`${t.slice(0,e).join("")}\u2026`}a(Je,"truncateMessage");function Ee(r){let e=r.get("error");if(!e)return null;let t=r.get("error_description"),s=t?`oauth provider rejected the request: ${e}: ${t}`:`oauth provider rejected the request: ${e}`;return Je(s,Ge)}a(Ee,"oauthProviderRejectMessage");var D=class{static{a(this,"AuthModule")}fetch;baseUrl;sessions;storage;oauthRelayBaseUrl;workBuddyPkce;workBuddyMiniProgram;workBuddyExchanges=new Map;listeners=new Map;nextListenerId=1;constructor(e,t,s={}){this.fetch=t,this.baseUrl=`${e.endpoint}${R.auth}`,this.oauthRelayBaseUrl=e.oauthRelayBaseUrl,this.storage=We(s.storage),this.workBuddyPkce=new ae(e.publishableKey),this.sessions=new ce({store:new ue(this.storage,e.publishableKey),refresh:a(n=>this.exchangeRefreshHandle(n),"refresh"),emit:a((n,i)=>this.notify(n,i),"emit"),isCredentialsRejected:a(n=>le(n)&&Ve(n),"isCredentialsRejected")}),s.workBuddyMiniProgram&&(this.workBuddyMiniProgram=new de(e.publishableKey,this.storage,s.workBuddyMiniProgram,n=>this.postForSession(b.loginWorkBuddyMiniProgram,n)))}async getAccessToken(){return(await this.sessions.ensure())?.accessToken}async signInWithWorkBuddyMiniProgram(e){return this.workBuddyMiniProgram?this.workBuddyMiniProgram.signIn(e):h({kind:"unimplemented",status:0,message:"Use createMiniProgramWorkBuddyCloud for WorkBuddy mini program login"})}async handleWorkBuddyMiniProgramCallback(e){return this.workBuddyMiniProgram?this.workBuddyMiniProgram.handleCallback(e):h({kind:"unimplemented",status:0,message:"Use createMiniProgramWorkBuddyCloud for WorkBuddy mini program login"})}async signInWithPassword(e){if(!e.password)return h(p("signInWithPassword requires a password"));let t=B(e,"signInWithPassword");return t.error?h(t.error):this.postForSession(b.signIn,{username:t.data.username,password:e.password})}async signInWithWechat(e,t){return e?t?this.postForSession(b.loginWechat,{code:e,appid:t}):h(p("signInWithWechat requires appid")):h(p("signInWithWechat requires code"))}async signUp(e){let t=B(e,"signUp");if(t.error)return h(t.error);if(!e.verificationToken)return h(p("signUp requires a verificationToken; run sendOtp + verifyOtp first (the provider rejects username+password-only signup)"));let s={verification_token:e.verificationToken};return t.data.kind==="phone"?s.phone_number=t.data.username:s.email=t.data.username,e.password&&(s.password=e.password),this.postForSession(b.signUp,s)}async sendOtp(e){let t=B(e,"sendOtp");if(t.error)return h(t.error);let s={};t.data.kind==="phone"?(s.phone_number=t.data.username,s.target="ANY"):(s.email=t.data.username,s.usage="email",e.emailRedirectTo&&(s.email_redirect_to=e.emailRedirectTo));let n=await this.request(b.verification,{method:"POST",body:s});if(n.error)return h(n.error);let i=n.data??{},o=typeof i.verification_id=="string"?i.verification_id:"";return o?S({verificationId:o,isExistingUser:i.is_user===!0}):h(p("provider returned no verification_id"))}async signInWithOtp(e){let t=B(e,"signInWithOtp");if(t.error)return h(t.error);let s=await this.sendOtp(e);if(s.error)return h(s.error);let{verificationId:n,isExistingUser:i}=s.data,o=t.data.kind==="phone"?{phone:t.data.username}:{email:t.data.username};return S({verificationId:n,isExistingUser:i,isUser:i,verify:a(({token:c,password:u})=>this.verifyOtp({verificationId:n,token:c,...o,isExistingUser:i,password:u}),"verify")})}async verifyOtp(e){let t=B(e,"verifyOtp");if(t.error)return h(t.error);if(!e.verificationId||!e.token)return h(p("verifyOtp requires verificationId and token"));let s=await this.request(b.verificationVerify,{method:"POST",body:{verification_id:e.verificationId,verification_code:e.token}});if(s.error)return h(s.error);let n=s.data??{},i=typeof n.verification_token=="string"?n.verification_token:"";if(!i)return h(p("provider returned no verification_token"));if(e.isExistingUser)return this.postForSession(b.signIn,{username:t.data.username,verification_token:i});let o=t.data.kind==="phone"?{phone:t.data.value,password:e.password}:{email:t.data.value,password:e.password};return this.signUp({...o,verificationToken:i})}async signInWithOAuth(e){if(!this.oauthRelayBaseUrl)return h(p("signInWithOAuth requires oauthRelayBaseUrl"));if(e.provider!=="google"&&e.provider!=="wechat"&&e.provider!=="workbuddy")return h(p("\u5F53\u524D SDK \u4E0D\u652F\u6301\u8BE5\u767B\u5F55\u65B9\u5F0F\uFF0C\u8BF7\u68C0\u67E5 SDK \u7248\u672C\u4E0E\u767B\u5F55\u914D\u7F6E\u3002"));let t=e.redirectTo??zt();return t?this.startRelayOAuth(e,t):h(p("signInWithOAuth requires redirectTo outside a browser environment"))}parseCallbackQuery(e){try{let t=/^https?:\/\//i.test(e)?new URL(e).search:e;return S(new URLSearchParams(t))}catch{return h(p("oauth callback URL is invalid"))}}async handleOAuthCallback(e){let t=this.parseCallbackQuery(e??ve());if(t.error||!t.data)return h(t.error??p("oauth callback URL is invalid"));let s=t.data,n=Ee(s);if(n)return h({kind:"unauthenticated",message:n,status:0});let i=s.get("code");if(!i)return S(null);let o=s.get("state")??"";if(!o)return h(p("oauth callback requires state"));let c=s.get("provider_id");if(c!=="custom-oauth")return h(p("oauth callback requires provider_id=custom-oauth"));let u={provider_id:c,provider_code:i,state:o,provider_params:{state:o}};return this.postForSession(b.signInWithProvider,u)}async handleWechatWebCallback(e){let t=this.parseCallbackQuery(e??ve());if(t.error||!t.data)return h(t.error??p("oauth callback URL is invalid"));let s=t.data,n=Ee(s);if(n)return h({kind:"unauthenticated",message:n,status:0});let i=s.get("code");if(!i)return S(null);let o=s.get("state")??"";if(!o)return h(p("oauth callback requires state"));let c=s.get("provider");return c&&c!=="wechat"?h(p("wechat callback requires provider=wechat")):s.get("provider_id")==="custom-oauth"?h(p("wechat callback must not use provider_id=custom-oauth")):this.postForSession(b.loginWechatWeb,{code:i,state:o})}async handleWorkBuddyCallback(e){let t=this.parseCallbackQuery(e??ve());if(t.error||!t.data)return h(t.error??p("oauth callback URL is invalid"));let s=t.data,n=s.get("provider");if(n&&n!=="workbuddy")return S(null);let i=Ee(s);if(i)return this.workBuddyPkce.clearVerifier(),h({kind:"unauthenticated",message:i,status:0});let o=s.get("code");if(!o)return S(null);let c=s.get("state")??"";if(!c)return h(p("workbuddy callback requires state"));if(s.get("provider_id")==="custom-oauth")return h(p("workbuddy callback must not use provider_id=custom-oauth"));if(this.workBuddyPkce.isConsumed(c))return S(null);let u=this.workBuddyExchanges.get(c);if(u)return u;let d=this.workBuddyPkce.readVerifier();if(!d)return h(p("workbuddy callback has no local PKCE verifier; sign in again in this tab"));this.workBuddyPkce.clearVerifier();let l=this.exchangeWorkBuddyCode(o,c,d);this.workBuddyExchanges.set(c,l);try{return await l}finally{this.workBuddyExchanges.delete(c)}}async exchangeWorkBuddyCode(e,t,s){let n=await this.postForSession(b.loginWorkBuddy,{code:e,state:t,code_verifier:s});return n.data&&this.workBuddyPkce.markConsumed(t),n}async resetPasswordForEmail(e){if(!e)return h(p("resetPasswordForEmail requires email"));let t=await this.request(b.verification,{method:"POST",body:{email:e,usage:"PASSWORD_RESET",target:"USER"}});if(t.error)return h(t.error);let s=t.data??{},n=typeof s.verification_id=="string"?s.verification_id:"";return n?S({updateUser:a(async({nonce:i,password:o})=>{let c=await this.request(b.verificationVerify,{method:"POST",body:{verification_id:n,verification_code:i}});if(c.error)return h(c.error);let u=c.data??{},d=typeof u.verification_token=="string"?u.verification_token:"";if(!d)return h(p("provider returned no verification_token"));let l=await this.request(b.resetPassword,{method:"POST",body:{email:e,new_password:o,verification_token:d}});if(l.error)return h(l.error);let f=await this.signInWithPassword({email:e,password:o});return f.error||this.notify("PASSWORD_RECOVERY",f.data),f},"updateUser")}):h(p("provider returned no verification_id"))}async resetPasswordForOld(e){let t=await this.getAccessToken();if(!t)return h({kind:"unauthenticated",message:"no active session",status:0});let s=await this.request(b.sudo,{method:"POST",token:t,body:{password:e.oldPassword}});if(s.error)return h(s.error);let n=s.data??{},i=typeof n.sudo_token=="string"?n.sudo_token:"";if(!i)return h(p("provider returned no sudo_token"));let o=await this.request(b.userPassword,{method:"PATCH",token:t,body:{sudo_token:i,new_password:e.newPassword}});if(o.error)return h(o.error);let c=await this.getSession();return c.data?(this.notify("USER_UPDATED",c.data),S(c.data)):h(c.error??{kind:"unauthenticated",message:"no active session",status:0})}async getSession(){try{return S(await this.sessions.ensure())}catch(e){return h(le(e)?e:K(e))}}async refreshSession(){try{return S(await this.sessions.forceRefresh())}catch(e){return h(le(e)?e:K(e))}}async getUser(){let e=await this.getAccessToken();if(!e)return h({kind:"unauthenticated",message:"no active session",status:0});let t=await this.request(b.userMe,{method:"GET",token:e});return t.error?(Ve(t.error)&&this.sessions.clear(),h(t.error)):S(Fe(t.data))}async signOut(){let e=this.sessions.peek();return e?.accessToken&&await this.request(b.signOut,{method:"POST",body:{},token:e.accessToken}),this.sessions.clear(),S(null)}onAuthStateChange(e){let t=this.nextListenerId++;return this.listeners.set(t,e),ze(e,"INITIAL_SESSION",this.sessions.peek()),()=>{this.listeners.delete(t)}}async startRelayOAuth(e,t){let s;try{s=new URL(t)}catch{return h(p("signInWithOAuth requires an absolute redirectTo URL"))}let n=new URL(`${this.oauthRelayBaseUrl}/authorize`);if(n.searchParams.set("provider",e.provider),n.searchParams.set("callback_url",s.toString()),e.provider==="workbuddy"){let i=await this.createWorkBuddyProof();if(i.error||!i.data)return h(i.error??p("signInWithOAuth could not create PKCE"));n.searchParams.set("code_challenge",i.data),n.searchParams.set("code_challenge_method","S256")}return S({url:n.toString()})}async createWorkBuddyProof(){if(!De())return h(p("workbuddy sign-in requires WebCrypto; it is unavailable in this runtime (an insecure http:// origin disables it \u2014 serve the app over https)"));if(!this.workBuddyPkce.usable())return h(p("workbuddy sign-in requires sessionStorage to keep the PKCE verifier across the redirect; it is unavailable in this runtime"));let e,t;try{e=Ne(),t=await Me(e)}catch(s){return h(p(`workbuddy sign-in could not create a PKCE proof: ${Kt(s)}`))}return this.workBuddyPkce.saveVerifier(e)?S(t):h(p("workbuddy sign-in could not persist the PKCE verifier"))}async exchangeRefreshHandle(e){let t=await this.request(b.token,{method:"POST",body:{grant_type:"refresh_token",refresh_token:e}});if(t.error)throw t.error;return Se(t.data,Date.now())}async postForSession(e,t,s={}){let n=await this.request(e,{method:"POST",body:t,headers:s.headers});if(n.error)return h(n.error);try{return S(this.sessions.commitSignIn(Se(n.data,Date.now())))}catch(i){return h(le(i)?i:K(i))}}async request(e,t){let s={...t.headers};t.body!==void 0&&(s["Content-Type"]="application/json"),t.token&&(s.Authorization=`Bearer ${t.token}`);let n;try{n=await this.fetch(this.baseUrl+e,{method:t.method,headers:s,body:t.body===void 0?void 0:JSON.stringify(t.body)})}catch(o){return h(K(o))}let i=await Vt(n);return n.ok?S(i):h(qe(n.status,i))}notify(e,t){for(let s of this.listeners.values())ze(s,e,t)}};function S(r){return{data:r,error:null}}a(S,"ok");function h(r){return{data:null,error:r}}a(h,"fail");function p(r){return{kind:"invalid-request",message:r,status:0}}a(p,"badRequest");function Kt(r){return Je(r instanceof Error?r.message:String(r),Ge)}a(Kt,"describeError");function le(r){return!!r&&typeof r=="object"&&typeof r.kind=="string"}a(le,"isCloudError");function Ve(r){return r.kind==="unauthenticated"||r.code==="invalid_grant"}a(Ve,"rejectedCredentials");async function Vt(r){let e=await r.text();if(!e)return null;try{return JSON.parse(e)}catch{return{message:e}}}a(Vt,"readBody");function ze(r,e,t){try{r(e,t)}catch{}}a(ze,"safeInvoke");function zt(){let r=globalThis.location;return r?r.origin+r.pathname:""}a(zt,"currentPageUrl");function ve(){return globalThis.location?.search??""}a(ve,"currentPageSearch");var Pe=a(r=>Math.min(1e3*2**r,3e4),"getRetryDelay"),Ye=[520,503],_e=["GET","HEAD","OPTIONS"];var I=class extends Error{static{a(this,"PostgrestError")}details;hint;code;constructor(e){super(e.message),this.name="PostgrestError",this.details=e.details,this.hint=e.hint,this.code=e.code}toJSON(){return{name:this.name,message:this.message,details:this.details,hint:this.hint,code:this.code}}};function Xe(r,e){return new Promise(t=>{if(e?.aborted){t();return}let s=setTimeout(()=>{e?.removeEventListener("abort",n),t()},r);function n(){clearTimeout(s),t()}a(n,"onAbort"),e?.addEventListener("abort",n)})}a(Xe,"sleep");function Gt(r,e,t,s){return!(!s||t>=3||!_e.includes(r)||!Ye.includes(e))}a(Gt,"shouldRetry");var V=class{static{a(this,"PostgrestBuilder")}method;url;headers;schema;body;shouldThrowOnError=!1;signal;fetch;isMaybeSingle;shouldStripNulls;urlLengthLimit;retryEnabled=!0;constructor(e){this.method=e.method,this.url=e.url,this.headers=new Headers(e.headers),this.schema=e.schema,this.body=e.body,this.shouldThrowOnError=e.shouldThrowOnError??!1,this.signal=e.signal,this.isMaybeSingle=e.isMaybeSingle??!1,this.shouldStripNulls=e.shouldStripNulls??!1,this.urlLengthLimit=e.urlLengthLimit??8e3,this.retryEnabled=e.retry??!0,e.fetch?this.fetch=e.fetch:this.fetch=fetch}throwOnError(){return this.shouldThrowOnError=!0,this}stripNulls(){if(this.headers.get("Accept")==="text/csv")throw new Error("stripNulls() cannot be used with csv()");return this.shouldStripNulls=!0,this}setHeader(e,t){return this.headers=new Headers(this.headers),this.headers.set(e,t),this}retry(e){return this.retryEnabled=e,this}then(e,t){if(this.schema===void 0||(["GET","HEAD"].includes(this.method)?this.headers.set("Accept-Profile",this.schema):this.headers.set("Content-Profile",this.schema)),this.method!=="GET"&&this.method!=="HEAD"&&this.headers.set("Content-Type","application/json"),this.shouldStripNulls){let o=this.headers.get("Accept");o==="application/vnd.pgrst.object+json"?this.headers.set("Accept","application/vnd.pgrst.object+json;nulls=stripped"):(!o||o==="application/json")&&this.headers.set("Accept","application/vnd.pgrst.array+json;nulls=stripped")}let s=this.fetch,i=a(async()=>{let o=0;for(;;){let c={};this.headers.forEach((d,l)=>{c[l]=d}),o>0&&(c["X-Retry-Count"]=String(o));let u;try{u=await s(this.url.toString(),{method:this.method,headers:c,body:JSON.stringify(this.body,(d,l)=>typeof l=="bigint"?l.toString():l),signal:this.signal})}catch(d){if(d?.name==="AbortError"||d?.code==="ABORT_ERR"||!_e.includes(this.method))throw d;if(this.retryEnabled&&o<3){let l=Pe(o);o++,await Xe(l,this.signal);continue}throw d}if(Gt(this.method,u.status,o,this.retryEnabled)){let d=u.headers?.get("Retry-After")??null,l=d!==null?Math.max(0,parseInt(d,10)||0)*1e3:Pe(o);await u.text(),o++,await Xe(l,this.signal);continue}return await this.processResponse(u)}},"executeWithRetry")();return this.shouldThrowOnError||(i=i.catch(o=>{let c="",u="",d="",l=o?.cause;if(l){let g=l?.message??"",y=l?.code??"";c=`${o?.name??"FetchError"}: ${o?.message}`,c+=`
+
+Caused by: ${l?.name??"Error"}: ${g}`,y&&(c+=` (${y})`),l?.stack&&(c+=`
+${l.stack}`)}else c=o?.stack??"";let f=this.url.toString().length;return o?.name==="AbortError"||o?.code==="ABORT_ERR"?(d="",u="Request was aborted (timeout or manual cancellation)",f>this.urlLengthLimit&&(u+=`. Note: Your request URL is ${f} characters, which may exceed server limits. If selecting many fields, consider using views. If filtering with large arrays (e.g., .in('id', [many IDs])), consider using an RPC function to pass values server-side.`)):(l?.name==="HeadersOverflowError"||l?.code==="UND_ERR_HEADERS_OVERFLOW")&&(d="",u="HTTP headers exceeded server limits (typically 16KB)",f>this.urlLengthLimit&&(u+=`. Your request URL is ${f} characters. If selecting many fields, consider using views. If filtering with large arrays (e.g., .in('id', [200+ IDs])), consider using an RPC function instead.`)),{success:!1,error:{message:`${o?.name??"FetchError"}: ${o?.message}`,details:c,hint:u,code:d},data:null,count:null,status:0,statusText:""}})),i.then(e,t)}async processResponse(e){let t=null,s=null,n=null,i=e.status,o=e.statusText;if(e.ok){if(this.method!=="HEAD"){let d=await e.text();if(d!=="")if(this.headers.get("Accept")==="text/csv")s=d;else if(this.headers.get("Accept")&&this.headers.get("Accept")?.includes("application/vnd.pgrst.plan+text"))s=d;else try{s=JSON.parse(d)}catch{if(t={message:d},s=null,this.shouldThrowOnError)throw new I({message:d,details:"",hint:"",code:""})}}let c=this.headers.get("Prefer")?.match(/count=(exact|planned|estimated)/),u=e.headers.get("content-range")?.split("/");if(c&&u&&u.length>1&&(n=parseInt(u[1])),this.isMaybeSingle&&Array.isArray(s))if(s.length>1){if(t={code:"PGRST116",details:`Results contain ${s.length} rows, application/vnd.pgrst.object+json requires 1 row`,hint:null,message:"JSON object requested, multiple (or no) rows returned"},s=null,n=null,i=406,o="Not Acceptable",this.shouldThrowOnError)throw new I({...t,hint:t.hint??""})}else s.length===1?s=s[0]:s=null}else{let c=await e.text();try{t=JSON.parse(c),Array.isArray(t)&&e.status===404&&(s=[],t=null,i=200,o="OK")}catch{e.status===404&&c===""?(i=204,o="No Content"):t={message:c}}if(t&&this.shouldThrowOnError)throw new I(t)}return{success:t===null,error:t,data:s,count:n,status:i,statusText:o}}returns(){return this}overrideTypes(){return this}};var z=class extends V{static{a(this,"PostgrestTransformBuilder")}throwOnError(){return super.throwOnError()}select(e){let t=!1,s=(e??"*").split("").map(n=>/\s/.test(n)&&!t?"":(n==='"'&&(t=!t),n)).join("");return this.url.searchParams.set("select",s),this.headers.append("Prefer","return=representation"),this}order(e,{ascending:t=!0,nullsFirst:s,foreignTable:n,referencedTable:i=n}={}){let o=i?`${i}.order`:"order",c=this.url.searchParams.get(o);return this.url.searchParams.set(o,`${c?`${c},`:""}${e}.${t?"asc":"desc"}${s===void 0?"":s?".nullsfirst":".nullslast"}`),this}limit(e,{foreignTable:t,referencedTable:s=t}={}){let n=typeof s>"u"?"limit":`${s}.limit`;return this.url.searchParams.set(n,`${e}`),this}range(e,t,{foreignTable:s,referencedTable:n=s}={}){let i=typeof n>"u"?"offset":`${n}.offset`,o=typeof n>"u"?"limit":`${n}.limit`;return this.url.searchParams.set(i,`${e}`),this.url.searchParams.set(o,`${t-e+1}`),this}abortSignal(e){return this.signal=e,this}single(){return this.headers.set("Accept","application/vnd.pgrst.object+json"),this}maybeSingle(){return this.isMaybeSingle=!0,this}csv(){return this.headers.set("Accept","text/csv"),this}geojson(){return this.headers.set("Accept","application/geo+json"),this}explain({analyze:e=!1,verbose:t=!1,settings:s=!1,buffers:n=!1,wal:i=!1,format:o="text"}={}){let c=[e?"analyze":null,t?"verbose":null,s?"settings":null,n?"buffers":null,i?"wal":null].filter(Boolean).join("|"),u=this.headers.get("Accept")??"application/json";return this.headers.set("Accept",`application/vnd.pgrst.plan+${o}; for="${u}"; options=${c};`),o==="json"?this:this}rollback(){return this.headers.append("Prefer","tx=rollback"),this}returns(){return this}maxAffected(e){return this.headers.append("Prefer","handling=strict"),this.headers.append("Prefer",`max-affected=${e}`),this}};var Ze=new RegExp("[,()]"),A=class extends z{static{a(this,"PostgrestFilterBuilder")}throwOnError(){return super.throwOnError()}eq(e,t){return this.url.searchParams.append(e,`eq.${t}`),this}neq(e,t){return this.url.searchParams.append(e,`neq.${t}`),this}gt(e,t){return this.url.searchParams.append(e,`gt.${t}`),this}gte(e,t){return this.url.searchParams.append(e,`gte.${t}`),this}lt(e,t){return this.url.searchParams.append(e,`lt.${t}`),this}lte(e,t){return this.url.searchParams.append(e,`lte.${t}`),this}like(e,t){return this.url.searchParams.append(e,`like.${t}`),this}likeAllOf(e,t){return this.url.searchParams.append(e,`like(all).{${t.join(",")}}`),this}likeAnyOf(e,t){return this.url.searchParams.append(e,`like(any).{${t.join(",")}}`),this}ilike(e,t){return this.url.searchParams.append(e,`ilike.${t}`),this}ilikeAllOf(e,t){return this.url.searchParams.append(e,`ilike(all).{${t.join(",")}}`),this}ilikeAnyOf(e,t){return this.url.searchParams.append(e,`ilike(any).{${t.join(",")}}`),this}regexMatch(e,t){return this.url.searchParams.append(e,`match.${t}`),this}regexIMatch(e,t){return this.url.searchParams.append(e,`imatch.${t}`),this}is(e,t){return this.url.searchParams.append(e,`is.${t}`),this}isDistinct(e,t){return this.url.searchParams.append(e,`isdistinct.${t}`),this}in(e,t){let s=Array.from(new Set(t)).map(n=>typeof n=="string"&&Ze.test(n)?`"${n}"`:`${n}`).join(",");return this.url.searchParams.append(e,`in.(${s})`),this}notIn(e,t){let s=Array.from(new Set(t)).map(n=>typeof n=="string"&&Ze.test(n)?`"${n}"`:`${n}`).join(",");return this.url.searchParams.append(e,`not.in.(${s})`),this}contains(e,t){return typeof t=="string"?this.url.searchParams.append(e,`cs.${t}`):Array.isArray(t)?this.url.searchParams.append(e,`cs.{${t.join(",")}}`):this.url.searchParams.append(e,`cs.${JSON.stringify(t)}`),this}containedBy(e,t){return typeof t=="string"?this.url.searchParams.append(e,`cd.${t}`):Array.isArray(t)?this.url.searchParams.append(e,`cd.{${t.join(",")}}`):this.url.searchParams.append(e,`cd.${JSON.stringify(t)}`),this}rangeGt(e,t){return this.url.searchParams.append(e,`sr.${t}`),this}rangeGte(e,t){return this.url.searchParams.append(e,`nxl.${t}`),this}rangeLt(e,t){return this.url.searchParams.append(e,`sl.${t}`),this}rangeLte(e,t){return this.url.searchParams.append(e,`nxr.${t}`),this}rangeAdjacent(e,t){return this.url.searchParams.append(e,`adj.${t}`),this}overlaps(e,t){return typeof t=="string"?this.url.searchParams.append(e,`ov.${t}`):this.url.searchParams.append(e,`ov.{${t.join(",")}}`),this}textSearch(e,t,{config:s,type:n}={}){let i="";n==="plain"?i="pl":n==="phrase"?i="ph":n==="websearch"&&(i="w");let o=s===void 0?"":`(${s})`;return this.url.searchParams.append(e,`${i}fts${o}.${t}`),this}match(e){return Object.entries(e).filter(([t,s])=>s!==void 0).forEach(([t,s])=>{this.url.searchParams.append(t,`eq.${s}`)}),this}not(e,t,s){return this.url.searchParams.append(e,`not.${t}.${s}`),this}or(e,{foreignTable:t,referencedTable:s=t}={}){let n=s?`${s}.or`:"or";return this.url.searchParams.append(n,`(${e})`),this}filter(e,t,s){return this.url.searchParams.append(e,`${t}.${s}`),this}};var G=class{static{a(this,"PostgrestQueryBuilder")}url;headers;schema;signal;fetch;urlLengthLimit;retry;constructor(e,{headers:t={},schema:s,fetch:n,urlLengthLimit:i=8e3,retry:o}){this.url=e,this.headers=new Headers(t),this.schema=s,this.fetch=n,this.urlLengthLimit=i,this.retry=o}cloneRequestState(){return{url:new URL(this.url.toString()),headers:new Headers(this.headers)}}select(e,t){let{head:s=!1,count:n}=t??{},i=s?"HEAD":"GET",o=!1,c=(e??"*").split("").map(l=>/\s/.test(l)&&!o?"":(l==='"'&&(o=!o),l)).join(""),{url:u,headers:d}=this.cloneRequestState();return u.searchParams.set("select",c),n&&d.append("Prefer",`count=${n}`),new A({method:i,url:u,headers:d,schema:this.schema,fetch:this.fetch,urlLengthLimit:this.urlLengthLimit,retry:this.retry})}insert(e,{count:t,defaultToNull:s=!0}={}){let n="POST",{url:i,headers:o}=this.cloneRequestState();if(t&&o.append("Prefer",`count=${t}`),s||o.append("Prefer","missing=default"),Array.isArray(e)){let c=e.reduce((u,d)=>u.concat(Object.keys(d)),[]);if(c.length>0){let u=[...new Set(c)].map(d=>`"${d}"`);i.searchParams.set("columns",u.join(","))}}return new A({method:n,url:i,headers:o,schema:this.schema,body:e,fetch:this.fetch??fetch,urlLengthLimit:this.urlLengthLimit,retry:this.retry})}upsert(e,{onConflict:t,ignoreDuplicates:s=!1,count:n,defaultToNull:i=!0}={}){let o="POST",{url:c,headers:u}=this.cloneRequestState();if(u.append("Prefer",`resolution=${s?"ignore":"merge"}-duplicates`),t!==void 0&&c.searchParams.set("on_conflict",t),n&&u.append("Prefer",`count=${n}`),i||u.append("Prefer","missing=default"),Array.isArray(e)){let d=e.reduce((l,f)=>l.concat(Object.keys(f)),[]);if(d.length>0){let l=[...new Set(d)].map(f=>`"${f}"`);c.searchParams.set("columns",l.join(","))}}return new A({method:o,url:c,headers:u,schema:this.schema,body:e,fetch:this.fetch??fetch,urlLengthLimit:this.urlLengthLimit,retry:this.retry})}update(e,{count:t}={}){let s="PATCH",{url:n,headers:i}=this.cloneRequestState();return t&&i.append("Prefer",`count=${t}`),new A({method:s,url:n,headers:i,schema:this.schema,body:e,fetch:this.fetch??fetch,urlLengthLimit:this.urlLengthLimit,retry:this.retry})}delete({count:e}={}){let t="DELETE",{url:s,headers:n}=this.cloneRequestState();return e&&n.append("Prefer",`count=${e}`),new A({method:t,url:s,headers:n,schema:this.schema,fetch:this.fetch??fetch,urlLengthLimit:this.urlLengthLimit,retry:this.retry})}};var N=class r{static{a(this,"PostgrestClient")}url;headers;schemaName;fetch;urlLengthLimit;retry;constructor(e,{headers:t={},schema:s,fetch:n,timeout:i,urlLengthLimit:o=8e3,retry:c}={}){this.url=e,this.headers=new Headers(t),this.schemaName=s,this.urlLengthLimit=o;let u=n??globalThis.fetch;i!==void 0&&i>0?this.fetch=(d,l)=>{let f=new AbortController,g=setTimeout(()=>f.abort(),i),y=l?.signal;if(y){if(y.aborted)return clearTimeout(g),u(d,l);let ne=a(()=>{clearTimeout(g),f.abort()},"abortHandler");return y.addEventListener("abort",ne,{once:!0}),u(d,{...l,signal:f.signal}).finally(()=>{clearTimeout(g),y.removeEventListener("abort",ne)})}return u(d,{...l,signal:f.signal}).finally(()=>clearTimeout(g))}:this.fetch=u,this.retry=c}from(e){if(!e||typeof e!="string"||e.trim()==="")throw new Error("Invalid relation name: relation must be a non-empty string.");let t=new URL(`${this.url}/${e}`);return new G(t,{headers:new Headers(this.headers),schema:this.schemaName,fetch:this.fetch,urlLengthLimit:this.urlLengthLimit,retry:this.retry})}schema(e){return new r(this.url,{headers:this.headers,schema:e,fetch:this.fetch,urlLengthLimit:this.urlLengthLimit,retry:this.retry})}rpc(e,t={},{head:s=!1,get:n=!1,count:i}={}){let o,c=new URL(`${this.url}/rpc/${e}`),u,d=a(g=>g!==null&&typeof g=="object"&&(!Array.isArray(g)||g.some(d)),"_isObject"),l=s&&Object.values(t).some(d);l?(o="POST",u=t):s||n?(o=s?"HEAD":"GET",Object.entries(t).filter(([g,y])=>y!==void 0).map(([g,y])=>[g,Array.isArray(y)?`{${y.join(",")}}`:`${y}`]).forEach(([g,y])=>{c.searchParams.append(g,y)})):(o="POST",u=t);let f=new Headers(this.headers);return l?f.set("Prefer",i?`count=${i},return=minimal`:"return=minimal"):i&&f.set("Prefer",`count=${i}`),new A({method:o,url:c,headers:f,schema:this.schemaName,body:u,fetch:this.fetch??fetch,urlLengthLimit:this.urlLengthLimit,retry:this.retry})}};var J=class{static{a(this,"WorkBuddyDatabaseModule")}client;constructor(e,t){this.client=new N(`${e.endpoint}${R.database}`,{fetch:t}),this.from=this.client.from.bind(this.client),this.rpc=this.client.rpc.bind(this.client)}from;rpc;get url(){return this.client.url}};function et(r,e){return new J(r,e)}a(et,"createDatabaseModule");var x=class extends Error{static{a(this,"CloudOpenAIError")}error;status;requestId;retryAfterMs;constructor(e,t={}){let s=typeof e=="string"?{message:e,type:"server_error",param:null,code:null}:e;super(s.message),this.name="CloudOpenAIError",this.error=s,this.status=t.status,this.requestId=t.requestId,this.retryAfterMs=t.retryAfterMs,t.cause!==void 0&&("cause"in this||Object.defineProperty(this,"cause",{value:t.cause,writable:!1,enumerable:!1,configurable:!1}))}};function tt(r){if(!r)return;let e=r.trim(),t=Number(e);if(!isNaN(t)&&t>=0&&Number.isInteger(t))return t*1e3;let s=Date.parse(e);if(!isNaN(s)){let n=s-Date.now();return n>0?n:0}}a(tt,"parseRetryAfter");function m(...r){return r.find(e=>typeof e=="string"&&e.length>0)}a(m,"stringField");function k(...r){return r.find(e=>typeof e=="number"&&Number.isFinite(e))}a(k,"numberField");function E(...r){return r.find(e=>typeof e=="boolean")}a(E,"booleanField");function rt(...r){for(let e of r){if(typeof e=="number"&&Number.isFinite(e))return e;if(e!==null&&typeof e=="object"&&!Array.isArray(e))return Jt(e)}}a(rt,"contextWindowField");function Jt(r){let e={};for(let[t,s]of Object.entries(r)){if(t==="supportedLengths"){Array.isArray(s)&&(e.supportedLengths=s.filter(n=>typeof n=="number"&&Number.isFinite(n)));continue}if(t==="defaultLength"){typeof s=="number"&&Number.isFinite(s)&&(e.defaultLength=s);continue}Object.defineProperty(e,t,{value:s,writable:!0,enumerable:!0,configurable:!0})}return e}a(Jt,"normalizeContextWindowObject");function st(r){if(!r||typeof r!="object")return;let e=r,t=Array.isArray(e.input)?e.input.filter(n=>typeof n=="string"):void 0,s=Array.isArray(e.output)?e.output.filter(n=>typeof n=="string"):void 0;return t?.length||s?.length?{...t?.length?{input:t}:{},...s?.length?{output:s}:{}}:void 0}a(st,"modalitiesField");function nt(r){if(!r||typeof r!="object")return;let t=Object.entries(r).filter(([,s])=>typeof s=="boolean");return t.length?Object.fromEntries(t):void 0}a(nt,"capabilitiesField");function it(r){if(!r||typeof r!="object")return;let e=r,t={...m(e.currency)?{currency:e.currency}:{},...k(e.inputPerMillionTokens)!==void 0?{inputPerMillionTokens:e.inputPerMillionTokens}:{},...k(e.outputPerMillionTokens)!==void 0?{outputPerMillionTokens:e.outputPerMillionTokens}:{},...m(e.displayText)?{displayText:e.displayText}:{}};return Object.keys(t).length?t:void 0}a(it,"pricingField");function ot(r){if(!r||typeof r!="object")return;let e=r,t={},s=m(e.effort);s!==void 0&&(t.effort=s);let n=m(e.defaultEffort);n!==void 0&&(t.defaultEffort=n),Array.isArray(e.supportedEfforts)&&(t.supportedEfforts=e.supportedEfforts.filter(c=>typeof c=="string"));let i=m(e.summary);i!==void 0&&(i==="auto"||i==="concise"||i==="detailed")&&(t.summary=i);let o=E(e.canDisableThinking);return o!==void 0&&(t.canDisableThinking=o),Object.keys(t).length>0?t:void 0}a(ot,"reasoningField");function Yt(r){let e=m(r.id,r.ID);if(!e)return null;let t=E(r.enabled,r.Enabled),s=E(r.disabled,r.Disabled),n,i;return t!==void 0?(n=t,s!==void 0&&(i=s)):s!==void 0?(i=s,n=!s):n=!0,{id:e,name:m(r.name,r.Name)??e,...m(r.provider,r.Provider)?{provider:m(r.provider,r.Provider)}:{},...m(r.vendor,r.Vendor)?{vendor:m(r.vendor,r.Vendor)}:{},...m(r.family,r.Family)?{family:m(r.family,r.Family)}:{},...m(r.version,r.Version)?{version:m(r.version,r.Version)}:{},...m(r.description,r.Description)?{description:m(r.description,r.Description)}:{},...m(r.descriptionZh,r.DescriptionZh)?{descriptionZh:m(r.descriptionZh,r.DescriptionZh)}:{},...m(r.descriptionEn,r.DescriptionEn)?{descriptionEn:m(r.descriptionEn,r.DescriptionEn)}:{},...m(r.iconUrl,r.IconURL)?{iconUrl:m(r.iconUrl,r.IconURL)}:{},...rt(r.contextWindow,r.ContextWindow)!==void 0?{contextWindow:rt(r.contextWindow,r.ContextWindow)}:{},...k(r.maxInputTokens,r.MaxInputTokens)!==void 0?{maxInputTokens:k(r.maxInputTokens,r.MaxInputTokens)}:{},...k(r.maxOutputTokens,r.MaxOutputTokens)!==void 0?{maxOutputTokens:k(r.maxOutputTokens,r.MaxOutputTokens)}:{},...st(r.modalities??r.Modalities)?{modalities:st(r.modalities??r.Modalities)}:{},...nt(r.capabilities??r.Capabilities)?{capabilities:nt(r.capabilities??r.Capabilities)}:{},enabled:n,...i!==void 0?{disabled:i}:{},...E(r.isDefault,r.IsDefault)!==void 0?{isDefault:E(r.isDefault,r.IsDefault)}:{},...k(r.sortOrder,r.SortOrder)!==void 0?{sortOrder:k(r.sortOrder,r.SortOrder)}:{},...it(r.pricing??r.Pricing)?{pricing:it(r.pricing??r.Pricing)}:{},...m(r.credits,r.Credits)?{credits:m(r.credits,r.Credits)}:{},...k(r.maxAllowedSize,r.MaxAllowedSize)!==void 0?{maxAllowedSize:k(r.maxAllowedSize,r.MaxAllowedSize)}:{},...E(r.disabledMultimodal,r.DisabledMultimodal)!==void 0?{disabledMultimodal:E(r.disabledMultimodal,r.DisabledMultimodal)}:{},...E(r.supportsImages,r.SupportsImages)!==void 0?{supportsImages:E(r.supportsImages,r.SupportsImages)}:{},...E(r.supportsToolCall,r.SupportsToolCall)!==void 0?{supportsToolCall:E(r.supportsToolCall,r.SupportsToolCall)}:{},...E(r.supportsReasoning,r.SupportsReasoning)!==void 0?{supportsReasoning:E(r.supportsReasoning,r.SupportsReasoning)}:{},...E(r.onlyReasoning,r.OnlyReasoning)!==void 0?{onlyReasoning:E(r.onlyReasoning,r.OnlyReasoning)}:{},...ot(r.reasoning??r.Reasoning)?{reasoning:ot(r.reasoning??r.Reasoning)}:{},...k(r.temperature,r.Temperature)!==void 0?{temperature:k(r.temperature,r.Temperature)}:{},...k(r.top_k,r.Top_K)!==void 0?{top_k:k(r.top_k,r.Top_K)}:{},...k(r.top_p,r.Top_P)!==void 0?{top_p:k(r.top_p,r.Top_P)}:{},...k(r.repetition_penalty,r.Repetition_Penalty)!==void 0?{repetition_penalty:k(r.repetition_penalty,r.Repetition_Penalty)}:{}}}a(Yt,"normalizeModel");function Te(r){return r.name||r.id}a(Te,"getModelDisplayName");function Oe(r,e){return r.capabilities?.[e]}a(Oe,"getModelCapability");var he=class{static{a(this,"ModelsAPI")}baseUrl;fetch;constructor(e,t){this.baseUrl=e,this.fetch=t}async list(e){let t;try{t=await this.fetch(`${this.baseUrl}/models`,{method:"GET",headers:{Accept:"application/json"},signal:e})}catch(c){throw c instanceof Error&&c.name==="AbortError"?c:new x({message:`Network error: ${c?.message??"unknown"}`,type:"server_error",param:null,code:"gateway_network_error"},{cause:c})}if(!t.ok)throw await Ae(t);let s=await t.text(),n;try{n=JSON.parse(s)}catch{throw new x({message:"Failed to parse models response: invalid JSON",type:"server_error",param:null,code:"gateway_invalid_response"})}let i=Array.isArray(n)?n:Array.isArray(n?.data)?n.data:[],o=[];for(let c of i){let u=Yt(c);u&&o.push(u)}return o}};async function Ae(r){let e=await r.text().catch(()=>""),t;try{let i=JSON.parse(e);if(i&&typeof i=="object"&&i.error){let o=i.error;t={message:typeof o.message=="string"?o.message:`HTTP ${r.status}`,type:typeof o.type=="string"?o.type:"server_error",param:o.param===void 0?null:o.param,code:o.code===void 0?null:o.code}}else t={message:typeof i=="string"?i:`HTTP ${r.status}`,type:"server_error",param:null,code:null}}catch{t={message:e||`HTTP ${r.status}`,type:"server_error",param:null,code:null}}let s=r.headers.get("x-request-id")??void 0,n=tt(r.headers.get("retry-after"));return new x(t,{status:r.status,requestId:s,retryAfterMs:n})}a(Ae,"httpError");var fe=class{static{a(this,"Utf8Decoder")}codePoint=0;bytesNeeded=0;bytesSeen=0;lowerBoundary=128;upperBoundary=191;bomSeen=!1;streaming=!1;resetSequence(){this.codePoint=0,this.bytesNeeded=0,this.bytesSeen=0,this.lowerBoundary=128,this.upperBoundary=191}decode(e=new Uint8Array,t={}){this.streaming||(this.resetSequence(),this.bomSeen=!1),this.streaming=t.stream===!0;let s="",n=a(i=>{!this.bomSeen&&(this.bomSeen=!0,i===65279)||(s+=String.fromCodePoint(i))},"emit");for(let i=0;i<e.length;i++){let o=e[i];if(this.bytesNeeded===0){o<=127?n(o):o>=194&&o<=223?(this.bytesNeeded=1,this.codePoint=o&31):o>=224&&o<=239?(this.bytesNeeded=2,this.codePoint=o&15,o===224&&(this.lowerBoundary=160),o===237&&(this.upperBoundary=159)):o>=240&&o<=244?(this.bytesNeeded=3,this.codePoint=o&7,o===240&&(this.lowerBoundary=144),o===244&&(this.upperBoundary=143)):n(65533);continue}if(o<this.lowerBoundary||o>this.upperBoundary){this.resetSequence(),n(65533),i--;continue}this.lowerBoundary=128,this.upperBoundary=191,this.codePoint=this.codePoint<<6|o&63,this.bytesSeen++,this.bytesSeen===this.bytesNeeded&&(n(this.codePoint),this.resetSequence())}return!this.streaming&&this.bytesNeeded>0&&(n(65533),this.resetSequence()),s}};var Xt=class{static{a(this,"SSEDecoder")}event=null;dataParts=[];decode(e){let t=e;if(t.endsWith("\r")&&(t=t.slice(0,-1)),t===""){if(this.event===null&&this.dataParts.length===0)return null;let o={event:this.event,data:this.dataParts.join(`
+`)};return this.event=null,this.dataParts=[],o}if(t.startsWith(":"))return null;let s=t.indexOf(":"),n,i;if(s===-1)n=t,i="";else{n=t.slice(0,s);let o=t.slice(s+1);o.startsWith(" ")&&(o=o.slice(1)),i=o}return n==="event"?this.event=i:n==="data"&&this.dataParts.push(i),null}flush(){if(this.event===null&&this.dataParts.length===0)return null;let e={event:this.event,data:this.dataParts.join(`
+`)};return this.event=null,this.dataParts=[],e}},Qt=class{static{a(this,"LineDecoder")}buffer=new Uint8Array;decoder;constructor(){this.decoder=typeof TextDecoder>"u"?new fe:new TextDecoder("utf-8")}decode(e){let t=new Uint8Array(this.buffer.length+e.length);t.set(this.buffer),t.set(e,this.buffer.length),this.buffer=t;let s=[],n=0;for(let i=0;i<this.buffer.length;i++)if(this.buffer[i]===10||this.buffer[i]===13){let o=this.buffer.subarray(n,i),c=this.decoder.decode(o,{stream:!0});s.push(c),this.buffer[i]===13&&i+1<this.buffer.length&&this.buffer[i+1]===10&&i++,n=i+1}return n>0&&(this.buffer=this.buffer.slice(n)),s}flush(){if(this.buffer.length===0){let t=this.decoder.decode();return t?[t]:[]}let e=this.decoder.decode(this.buffer,{stream:!1});return this.buffer=new Uint8Array,e?[e]:[]}},at="[DONE]";async function*ct(r,e){let t=new Xt,s=new Qt,n=r.getReader(),i=!1,o=a(()=>{i=!0,n.cancel().catch(()=>{})},"onAbort");if(e){if(e.aborted)return;e.addEventListener("abort",o,{once:!0})}try{for(;;){if(i)return;let u;try{u=await n.read()}catch(f){if(i||f instanceof Error&&f.name==="AbortError")return;throw f}let{done:d,value:l}=u;if(d)break;for(let f of s.decode(l)){let g=t.decode(f);g&&(yield g)}}for(let u of s.flush()){let d=t.decode(u);d&&(yield d)}let c=t.flush();c&&(yield c)}finally{e&&e.removeEventListener("abort",o);try{n.releaseLock()}catch{}}}a(ct,"iterSSEEvents");function Zt(r,e){let t=e?{requestId:e}:{};try{let s=JSON.parse(r);if(s&&typeof s=="object"){let n=s.error??s;if(n&&typeof n=="object")return new x({message:typeof n.message=="string"?n.message:"Stream error",type:typeof n.type=="string"?n.type:"server_error",param:n.param===void 0?null:n.param,code:n.code===void 0?null:n.code},t)}}catch{}return new x({message:r||"Stream error",type:"server_error",param:null,code:null},t)}a(Zt,"extractSSEError");var pe=class{static{a(this,"ChatCompletionsAPI")}baseUrl;fetch;constructor(e,t){this.baseUrl=e,this.fetch=t}create(e){if(e.stream!==!0)throw new x({message:"stream must be true; non-streaming chat completions are not supported",type:"invalid_request_error",param:"stream",code:"request_stream_required"});return this.createStreaming(e)}async*createStreaming(e){let{signal:t,conversationId:s,...n}=e;n.stream=!0;let i;try{i=await this.fetch(`${this.baseUrl}/chat/completions`,{method:"POST",headers:{Accept:"text/event-stream","Content-Type":"application/json",...s!==void 0?{"X-Conversation-ID":s}:{}},body:JSON.stringify(n),signal:t})}catch(d){if(d instanceof Error&&d.name==="AbortError")return;throw new x({message:`Network error: ${d?.message??"unknown"}`,type:"server_error",param:null,code:"gateway_network_error"},{cause:d})}if(!i.ok)throw await Ae(i);if(!i.body)throw new x({message:"Response body is empty \u2014 streaming not supported",type:"server_error",param:null,code:"gateway_invalid_response"},{requestId:i.headers.get("x-request-id")??void 0});let o=i.headers.get("x-request-id")??void 0,c=!1,u=!1;try{for await(let d of ct(i.body,t)){if(d.event==="error")throw u=!0,Zt(d.data,o);if(d.event===null||d.event===""){if(d.data===at){c=!0;return}if(!d.data)continue;let l;try{l=JSON.parse(d.data)}catch{throw u=!0,new x({message:`Failed to parse SSE data: ${d.data}`,type:"server_error",param:null,code:"gateway_invalid_response"},{requestId:o})}if(l&&typeof l=="object"&&"error"in l){u=!0;let f=l.error;throw new x({message:typeof f?.message=="string"?f.message:"Stream error",type:typeof f?.type=="string"?f.type:"server_error",param:f?.param===void 0?null:f.param,code:f?.code===void 0?null:f.code},{requestId:o})}yield l}}}catch(d){if(d instanceof Error&&d.name==="AbortError")return;throw u=!0,d}if(!c&&!u&&!t?.aborted)throw new x({message:"\u6D41\u5F0F\u54CD\u5E94\u4E2D\u65AD\u3002",type:"server_error",param:null,code:"gateway_stream_interrupted"},{requestId:o})}};var M=class{static{a(this,"LlmModule")}fetch;baseUrl;models;chat;constructor(e,t){this.fetch=t,this.baseUrl=`${e.endpoint}${R.llm}`,this.models=new he(this.baseUrl,this.fetch),this.chat={completions:new pe(this.baseUrl,this.fetch)}}};var F=class extends Error{static{a(this,"StorageError")}__isStorageError=!0;namespace;status;statusCode;constructor(e,t="storage",s,n){super(e),this.namespace=t,this.name=t==="vectors"?"StorageVectorsError":"StorageError",this.status=s,this.statusCode=n}toJSON(){return{name:this.name,message:this.message,status:this.status,statusCode:this.statusCode}}};function U(r){return typeof r=="object"&&r!==null&&"__isStorageError"in r}a(U,"isStorageError");var C=class extends F{static{a(this,"StorageApiError")}status;statusCode;code;constructor(e,t,s,n="storage",i){super(e,n,t,s),this.name=n==="vectors"?"StorageVectorsApiError":"StorageApiError",this.status=t,this.statusCode=s,this.code=i}toJSON(){return{...super.toJSON(),code:this.code}}},q=class extends F{static{a(this,"StorageUnknownError")}originalError;constructor(e,t,s="storage"){super(e,s),this.name=s==="vectors"?"StorageVectorsUnknownError":"StorageUnknownError",this.originalError=t}};function L(r,e,t){let s={...r},n=e.toLowerCase();for(let i of Object.keys(s))i.toLowerCase()===n&&delete s[i];return s[n]=t,s}a(L,"setHeader");function ut(r){let e={};for(let[t,s]of Object.entries(r))e[t.toLowerCase()]=s;return e}a(ut,"normalizeHeaders");var dt=a(r=>r?(...e)=>r(...e):(...e)=>fetch(...e),"resolveFetch");var lt=a(r=>{if(typeof r!="object"||r===null)return!1;let e=Object.getPrototypeOf(r);return(e===null||e===Object.prototype||Object.getPrototypeOf(e)===null)&&!(Symbol.toStringTag in r)&&!(Symbol.iterator in r)},"isPlainObject"),me=a(r=>{if(Array.isArray(r))return r.map(t=>me(t));if(typeof r=="function"||r!==Object(r))return r;let e={};return Object.entries(r).forEach(([t,s])=>{let n=t.replace(/([-_][a-z])/gi,i=>i.toUpperCase().replace(/[-_]/g,""));e[n]=me(s)}),e},"recursiveToCamel");var ht=a(r=>r.split("/").map(encodeURIComponent).join("/"),"encodeStoragePath");var ft=a(r=>{if(typeof r=="object"&&r!==null){let e=r;if(typeof e.msg=="string")return e.msg;if(typeof e.message=="string")return e.message;if(typeof e.error_description=="string")return e.error_description;if(typeof e.error=="string")return e.error;if(typeof e.error=="object"&&e.error!==null){let t=e.error;if(typeof t.message=="string")return t.message}}return JSON.stringify(r)},"_getErrorMessage"),er=a(async(r,e,t,s)=>{if(r!==null&&typeof r=="object"&&"json"in r&&typeof r.json=="function"){let i=r,o=parseInt(String(i.status),10);Number.isFinite(o)||(o=500),i.json().then(c=>{let u=c?.statusCode||c?.code||o+"";e(new C(ft(c),o,u,s,c?.code))}).catch(()=>{let c=o+"",u=i.statusText||`HTTP ${o} error`;e(new C(u,o,c,s))})}else e(new q(ft(r),r,s))},"handleError"),tr=a((r,e,t,s)=>{let n={method:r,headers:e?.headers||{}};if(r==="GET"||r==="HEAD"||!s)return{...n,...t};if(lt(s)){let i=e?.headers||{},o;for(let[c,u]of Object.entries(i))c.toLowerCase()==="content-type"&&(o=u);n.headers=L(i,"Content-Type",o??"application/json"),n.body=JSON.stringify(s)}else n.body=s;return e?.duplex&&(n.duplex=e.duplex),{...n,...t}},"_getRequestParams");async function Y(r,e,t,s,n,i,o){return new Promise((c,u)=>{r(t,tr(e,s,n,i)).then(d=>{if(!d.ok)throw d;if(s?.noResolveJson)return d;if(o==="vectors"){let l=d.headers.get("content-type");if(d.headers.get("content-length")==="0"||d.status===204)return{};if(!l||!l.includes("application/json"))return{}}return d.json()}).then(d=>c(d)).catch(d=>er(d,u,s,o))})}a(Y,"_handleRequest");function pt(r="storage"){return{get:a(async(e,t,s,n)=>Y(e,"GET",t,s,n,void 0,r),"get"),post:a(async(e,t,s,n,i)=>Y(e,"POST",t,n,i,s,r),"post"),put:a(async(e,t,s,n,i)=>Y(e,"PUT",t,n,i,s,r),"put"),head:a(async(e,t,s,n)=>Y(e,"HEAD",t,{...s,noResolveJson:!0},n,void 0,r),"head"),remove:a(async(e,t,s,n,i)=>Y(e,"DELETE",t,n,i,s,r),"remove")}}a(pt,"createFetchApi");var rr=pt("storage"),{get:Re,post:$,put:$e,head:mt,remove:Ue}=rr,Ms=pt("vectors");var X=class{static{a(this,"BaseApiClient")}url;headers;fetch;shouldThrowOnError=!1;namespace;constructor(e,t={},s,n="storage"){this.url=e,this.headers=ut(t),this.fetch=dt(s),this.namespace=n}throwOnError(){return this.shouldThrowOnError=!0,this}setHeader(e,t){return this.headers=L(this.headers,e,t),this}async handleOperation(e){try{return{data:await e(),error:null}}catch(t){if(this.shouldThrowOnError)throw t;if(U(t))return{data:null,error:t};throw t}}};var Q=class{static{a(this,"StreamDownloadBuilder")}downloadFn;shouldThrowOnError;[Symbol.toStringTag]="StreamDownloadBuilder";promise=null;constructor(e,t){this.downloadFn=e,this.shouldThrowOnError=t}then(e,t){return this.getPromise().then(e,t)}catch(e){return this.getPromise().catch(e)}finally(e){return this.getPromise().finally(e)}getPromise(){return this.promise||(this.promise=this.execute()),this.promise}async execute(){try{return{data:(await this.downloadFn()).body,error:null}}catch(e){if(this.shouldThrowOnError)throw e;if(U(e))return{data:null,error:e};throw e}}};var Z=class{static{a(this,"BlobDownloadBuilder")}downloadFn;shouldThrowOnError;[Symbol.toStringTag]="BlobDownloadBuilder";promise=null;constructor(e,t){this.downloadFn=e,this.shouldThrowOnError=t}asStream(){return new Q(this.downloadFn,this.shouldThrowOnError)}then(e,t){return this.getPromise().then(e,t)}catch(e){return this.getPromise().catch(e)}finally(e){return this.getPromise().finally(e)}getPromise(){return this.promise||(this.promise=this.execute()),this.promise}async execute(){try{return{data:await(await this.downloadFn()).blob(),error:null}}catch(e){if(this.shouldThrowOnError)throw e;if(U(e))return{data:null,error:e};throw e}}};var Ie={limit:100,offset:0,sortBy:{column:"name",order:"asc"}},gt={cacheControl:"3600",contentType:"text/plain;charset=UTF-8",upsert:!1},ee=class extends X{static{a(this,"StorageFileApi")}bucketId;constructor(e,t={},s,n){super(e,t,n,"storage"),this.bucketId=s}async uploadOrUpdate(e,t,s,n){return this.handleOperation(async()=>{let i,o={...gt,...n},c={...this.headers,...e==="POST"&&{"x-upsert":String(o.upsert)}},u=o.metadata;if(typeof Blob<"u"&&s instanceof Blob?(i=new FormData,i.append("cacheControl",o.cacheControl),u&&i.append("metadata",this.encodeMetadata(u)),i.append("",s)):typeof FormData<"u"&&s instanceof FormData?(i=s,i.has("cacheControl")||i.append("cacheControl",o.cacheControl),u&&!i.has("metadata")&&i.append("metadata",this.encodeMetadata(u))):(i=s,c["cache-control"]=`max-age=${o.cacheControl}`,c["content-type"]=o.contentType,u&&(c["x-metadata"]=this.toBase64(this.encodeMetadata(u))),(typeof ReadableStream<"u"&&i instanceof ReadableStream||i&&typeof i=="object"&&"pipe"in i&&typeof i.pipe=="function")&&!o.duplex&&(o.duplex="half")),n?.headers)for(let[g,y]of Object.entries(n.headers))c=L(c,g,y);let d=this._removeEmptyFolders(t),l=this._getFinalPath(d),f=await(e=="PUT"?$e:$)(this.fetch,`${this.url}/object/${l}`,i,{headers:c,...o?.duplex?{duplex:o.duplex}:{}});return{path:d,id:f.Id,fullPath:f.Key}})}async upload(e,t,s){return this.uploadOrUpdate("POST",e,t,s)}async uploadToSignedUrl(e,t,s,n){let i=this._removeEmptyFolders(e),o=this._getFinalPath(i),c=new URL(this.url+`/object/upload/sign/${o}`);return c.searchParams.set("token",t),this.handleOperation(async()=>{let u,d={...gt,...n},l={...this.headers,"x-upsert":String(d.upsert)},f=d.metadata;if(typeof Blob<"u"&&s instanceof Blob?(u=new FormData,u.append("cacheControl",d.cacheControl),f&&u.append("metadata",this.encodeMetadata(f)),u.append("",s)):typeof FormData<"u"&&s instanceof FormData?(u=s,u.has("cacheControl")||u.append("cacheControl",d.cacheControl),f&&!u.has("metadata")&&u.append("metadata",this.encodeMetadata(f))):(u=s,l["cache-control"]=`max-age=${d.cacheControl}`,l["content-type"]=d.contentType,f&&(l["x-metadata"]=this.toBase64(this.encodeMetadata(f))),(typeof ReadableStream<"u"&&u instanceof ReadableStream||u&&typeof u=="object"&&"pipe"in u&&typeof u.pipe=="function")&&!d.duplex&&(d.duplex="half")),n?.headers)for(let[y,ne]of Object.entries(n.headers))l=L(l,y,ne);let g=await $e(this.fetch,c.toString(),u,{headers:l,...d?.duplex?{duplex:d.duplex}:{}});return{path:i,fullPath:g.Key}})}async createSignedUploadUrl(e,t){return this.handleOperation(async()=>{let s=this._getFinalPath(e),n={...this.headers};t?.upsert&&(n["x-upsert"]="true");let i=await $(this.fetch,`${this.url}/object/upload/sign/${s}`,{},{headers:n}),o=new URL(this.url+i.url),c=o.searchParams.get("token");if(!c)throw new F("No token returned by API");return{signedUrl:o.toString(),path:e,token:c}})}async update(e,t,s){return this.uploadOrUpdate("PUT",e,t,s)}async move(e,t,s){return this.handleOperation(async()=>await $(this.fetch,`${this.url}/object/move`,{bucketId:this.bucketId,sourceKey:e,destinationKey:t,destinationBucket:s?.destinationBucket},{headers:this.headers}))}async copy(e,t,s){return this.handleOperation(async()=>({path:(await $(this.fetch,`${this.url}/object/copy`,{bucketId:this.bucketId,sourceKey:e,destinationKey:t,destinationBucket:s?.destinationBucket},{headers:this.headers})).Key}))}async createSignedUrl(e,t,s){return this.handleOperation(async()=>{let n=this._getFinalPath(e),i=typeof s?.transform=="object"&&s.transform!==null&&Object.keys(s.transform).length>0,o=await $(this.fetch,`${this.url}/object/sign/${n}`,{expiresIn:t,...i?{transform:s.transform}:{}},{headers:this.headers}),c=new URLSearchParams;s?.download&&c.set("download",s.download===!0?"":s.download),s?.cacheNonce!=null&&c.set("cacheNonce",String(s.cacheNonce));let u=c.toString();return{signedUrl:encodeURI(`${this.url}${o.signedURL}${u?`&${u}`:""}`)}})}async createSignedUrls(e,t,s){return this.handleOperation(async()=>{let n=await $(this.fetch,`${this.url}/object/sign/${this.bucketId}`,{expiresIn:t,paths:e},{headers:this.headers}),i=new URLSearchParams;s?.download&&i.set("download",s.download===!0?"":s.download),s?.cacheNonce!=null&&i.set("cacheNonce",String(s.cacheNonce));let o=i.toString();return n.map(c=>({...c,signedUrl:c.signedURL?encodeURI(`${this.url}${c.signedURL}${o?`&${o}`:""}`):null}))})}download(e,t,s){let i=typeof t?.transform=="object"&&t.transform!==null&&Object.keys(t.transform).length>0?"render/image/authenticated":"object",o=new URLSearchParams;t?.transform&&this.applyTransformOptsToQuery(o,t.transform),t?.cacheNonce!=null&&o.set("cacheNonce",String(t.cacheNonce));let c=o.toString(),u=this._getFinalPath(e),d=a(()=>Re(this.fetch,`${this.url}/${i}/${u}${c?`?${c}`:""}`,{headers:this.headers,noResolveJson:!0},s),"downloadFn");return new Z(d,this.shouldThrowOnError)}async info(e){let t=this._getFinalPath(e);return this.handleOperation(async()=>{let s=await Re(this.fetch,`${this.url}/object/info/${t}`,{headers:this.headers});return me(s)})}async exists(e){let t=this._getFinalPath(e);try{return await mt(this.fetch,`${this.url}/object/${t}`,{headers:this.headers}),{data:!0,error:null}}catch(s){if(this.shouldThrowOnError)throw s;if(U(s)){let n=s instanceof C?s.status:s instanceof q?s.originalError?.status:void 0;if(n!==void 0&&[400,404].includes(n))return{data:!1,error:s}}throw s}}getPublicUrl(e,t){let s=this._getFinalPath(e),n=new URLSearchParams;t?.download&&n.set("download",t.download===!0?"":t.download),t?.transform&&this.applyTransformOptsToQuery(n,t.transform),t?.cacheNonce!=null&&n.set("cacheNonce",String(t.cacheNonce));let i=n.toString(),c=typeof t?.transform=="object"&&t.transform!==null&&Object.keys(t.transform).length>0?"render/image":"object";return{data:{publicUrl:encodeURI(`${this.url}/${c}/public/${s}`)+(i?`?${i}`:"")}}}async remove(e){return this.handleOperation(async()=>await Ue(this.fetch,`${this.url}/object/${this.bucketId}`,{prefixes:e},{headers:this.headers}))}async purgeCache(e,t,s){return this.handleOperation(async()=>{let n=ht(this._getFinalPath(e)),i=new URLSearchParams;t?.transformations&&i.set("transformations","true");let o=i.toString();return await Ue(this.fetch,`${this.url}/cdn/${n}${o?`?${o}`:""}`,{},{headers:this.headers},s)})}async list(e,t,s){return this.handleOperation(async()=>{let n=t?.sortBy?{...Ie.sortBy,...t.sortBy}:Ie.sortBy,i={...Ie,...t,sortBy:n,prefix:e||""};return await $(this.fetch,`${this.url}/object/list/${this.bucketId}`,i,{headers:this.headers},s)})}async listV2(e,t){return this.handleOperation(async()=>{let s={...e};return await $(this.fetch,`${this.url}/object/list-v2/${this.bucketId}`,s,{headers:this.headers},t)})}encodeMetadata(e){return JSON.stringify(e)}toBase64(e){return typeof Buffer<"u"?Buffer.from(e).toString("base64"):btoa(e)}_getFinalPath(e){return`${this.bucketId}/${e.replace(/^\/+/,"")}`}_removeEmptyFolders(e){return e.replace(/^\/|\/$/g,"").replace(/\/+/g,"/")}applyTransformOptsToQuery(e,t){return t.width&&e.set("width",t.width.toString()),t.height&&e.set("height",t.height.toString()),t.resize&&e.set("resize",t.resize),t.format&&e.set("format",t.format),t.quality&&e.set("quality",t.quality.toString()),e}};var yt="2.112.3";var bt={"X-Client-Info":`storage-js/${yt}`};var W="runtime",ge=600,ye=3600,w=class extends Error{static{a(this,"CloudStoragePathError")}constructor(e){super(e),this.name="CloudStoragePathError"}},te=class{static{a(this,"WorkBuddyStorageDownload")}blob;stream;[Symbol.toStringTag]="WorkBuddyStorageDownload";constructor(e,t){this.blob=e,this.stream=t}asStream(){return this.stream()}then(e,t){return this.blob().then(e,t)}catch(e){return this.blob().catch(e)}finally(e){return this.blob().finally(e)}},H=class{static{a(this,"WorkBuddyStorageBucket")}fileApi;constructor(e){this.fileApi=e}upload(e,t,s){return _(this.fileApi.upload(v(e),t,s))}update(e,t,s){return _(this.fileApi.update(v(e),t,s))}list(e="",t){return _(this.fileApi.list(St(e),t))}listPage(e){return _(this.fileApi.listV2({...e,prefix:St(e?.prefix??"")}))}info(e){return _(this.fileApi.info(v(e)))}async exists(e){let t=await this.fileApi.exists(v(e));return t.error?{data:null,error:Et(t.error)}:{data:t.data,error:null}}download(e){let t=this.fileApi.download(v(e));return new te(()=>_(t),()=>_(t.asStream()))}remove(e){if(e.length===0)throw new w("remove requires at least one object path.");return _(this.fileApi.remove(e.map(v)))}copy(e,t){return _(this.fileApi.copy(v(e),v(t)))}move(e,t){return _(this.fileApi.move(v(e),v(t)))}createSignedUrl(e,t=ge){return _(this.fileApi.createSignedUrl(v(e),kt(t)))}createSignedUrls(e,t=ge){if(e.length===0)throw new w("createSignedUrls requires at least one object path.");return _(this.fileApi.createSignedUrls(e.map(v),kt(t)))}createSignedUploadUrl(e,t){return _(this.fileApi.createSignedUploadUrl(v(e),{upsert:t?.upsert??!1}))}uploadToSignedUrl(e,t,s,n){if(!t)throw new w("signed upload token is required.");return _(this.fileApi.uploadToSignedUrl(v(e),t,s,n))}},re=class extends H{static{a(this,"WorkBuddyStorageModule")}runtime;constructor(e){let s=e.from(W);super(s),this.runtime=new H(s)}from(e=W){if(e!==W)throw new w(`Only the "${W}" storage bucket is available.`);return this.runtime}userPath(e,t){return wt("users",e,t)}sharedPath(e,t){return wt("shared",e,t)}};function xt(r,e){let t={from:a(s=>new ee(`${r.endpoint}${R.storage}`,bt,s,e),"from")};return new re(t)}a(xt,"createStorageModule");function wt(r,e,t){let s=sr(e,"owner/user id"),n=Ce(t,!1);return v(`${r}/${s}/${n}`)}a(wt,"scopedPath");function v(r){let e=Ce(r,!1);if(!e.includes("/"))throw new w("Object paths must use users/<uid>/... or shared/<ownerUid>/....");let[t,s,...n]=e.split("/");if(t!=="users"&&t!=="shared"||!s||n.length===0)throw new w("Object paths must use users/<uid>/... or shared/<ownerUid>/....");return e}a(v,"validateObjectPath");function St(r){if(r==="")return"";let e=Ce(r,!0),[t,s]=e.split("/");if(t==="shared"&&!s)return"shared";if(t!=="users"&&t!=="shared"||!s)throw new w("List prefixes must start with users/<uid> or shared/<ownerUid>.");return e}a(St,"validateObjectPrefix");function Ce(r,e){if(typeof r!="string"||r.trim()==="")throw new w("Storage path must be a non-empty relative path.");let t=r.trim();for(let i=0;i<3;i+=1)try{let o=decodeURIComponent(t);if(o===t)break;t=o}catch{throw new w("Storage path contains invalid URL encoding.")}if(t.startsWith("/")||t.includes("\\")||t.includes("\0")||t.includes("//")||!e&&t.endsWith("/"))throw new w("Storage path is not a safe relative object path.");let s=e?t.replace(/\/+$/,""):t;if(s.split("/").some(i=>i===""||i==="."||i===".."))throw new w("Storage path traversal is not allowed.");return s}a(Ce,"validatePath");function sr(r,e){if(!r)throw new w(`${e} is not a valid storage path segment.`);let t=r;for(let s=0;s<3;s+=1)try{let n=decodeURIComponent(t);if(n===t)break;t=n}catch{throw new w(`${e} contains invalid URL encoding.`)}if(t.includes("/")||t.includes("\\")||t.includes("\0")||t==="."||t==="..")throw new w(`${e} is not a valid storage path segment.`);return t}a(sr,"validatePathSegment");function kt(r){if(!Number.isInteger(r)||r<=0||r>ye)throw new w(`Signed URL expiry must be an integer between 1 and ${ye} seconds.`);return r}a(kt,"validateSignedURLTTL");async function _(r){let e=await r;return e.error?{data:null,error:Et(e.error)}:e.data===null?{data:null,error:{name:"CloudStorageResponseError",message:"Storage API returned neither data nor an error."}}:{data:e.data,error:null}}a(_,"mapStorageResult");function Et(r){if(r instanceof Error){let e=r;return{name:e.name,message:e.message,status:e.status,statusCode:e.statusCode,code:e.code,cause:r}}return{name:"CloudStorageError",message:String(r),cause:r}}a(Et,"normalizeStorageError");var se=class{static{a(this,"WorkBuddyCloudClient")}config;database;auth;storage;llm;constructor(e,t={}){this.config=e,this.auth=new D(e,we(e,oe),{storage:t.storage,workBuddyMiniProgram:t.workBuddyMiniProgram});let s=we(e,()=>this.auth.getAccessToken());this.database=et(e,s),this.storage=xt(e,s),this.llm=new M(e,s)}get endpoint(){return this.config.endpoint}get oauthRelayBaseUrl(){return this.config.oauthRelayBaseUrl}};function vt(r){return new se(je(r),{storage:r.storage})}a(vt,"createWorkBuddyCloud");function Pt(r){return r.kind==="unauthenticated"||r.code==="invalid_grant"}a(Pt,"shouldClearCredentials");return $t(nr);})();
+
+</script>
+<script>
+/* ============================================================
+   猩猩导演台 · 数据层
+   localStorage 持久化 + 种子数据（第1章真实改编产物）
+   ============================================================ */
+
+const Store = (() => {
+  const KEY = 'gorilla_studio_v1';
+
+  const uid = (p = 'id') => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const now = () => new Date().toISOString();
+  const fmtTime = iso => {
+    const d = new Date(iso);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  };
+
+  // ---------- 种子：第1章改编产物 ----------
+  function seedData() {
+    const p1 = 'proj_baofu';
+    const p2 = 'proj_news';
+    return {
+      version: 1,
+      activeProjectId: p1,
+      projects: [
+        {
+          id: p1,
+          name: '暴富·山城故事（改编试跑）',
+          type: 'novel',
+          emoji: '🏗️',
+          cover: 'linear-gradient(135deg,#ff6b35,#c2410c)',
+          createdAt: now(),
+          updatedAt: now(),
+
+          script: {
+            source: '腊月二十三，小年。北京的风跟砂纸似的……（小说第1章《一百块》全文，详见长篇小说/正文）',
+            title: '一百块',
+            targetSeconds: 180,
+            estimatedSeconds: 193.5,
+            voicedChars: 542,
+            scenes: [
+              { id: 'EP001-SC001', location: '工地板房', time: '小年白天',
+                content: '老蔡点名发钱。轮到陈大年，以"活儿糙被扣钱"为由压款。陈大年当众点破"说是一万，这是一千"，老蔡补够一万，又单独甩出一张一百块"买烟钱"羞辱。陈大年折成四折收进上衣口袋，说"谢蔡哥"。' },
+              { id: 'EP001-SC002', location: '板房门口', time: '接前场',
+                content: '陈大年出门瞥见改造图纸，发现正房七架梁被标"装饰，拆除"。他指出这是承重梁、拆了开春化冻房要出事，被老蔡当众讥笑"打柜子的操结构工程师的心"。他顶风走远，没再回头。' }
+            ]
+          },
+
+          setup: {
+            characters: [
+              { id: 'CHAR-DANIAN', name: '陈大年', role: '男主 · 装修木工', emoji: '👷',
+                desc: '四十出头，祖传榫卯手艺，手掌厚茧，木讷隐忍但不窝囊。',
+                traits: ['厚茧的手', '旧棉袄', '帆布挎包'],
+                views: { front: true, side: true, back: false },
+                prompt: 'middle-aged Chinese carpenter, weathered face, work-worn hands, old padded jacket, canvas tool bag, 3-view character sheet' },
+              { id: 'CHAR-CAI', name: '老蔡', role: '对手 · 包工头', emoji: '🧑‍💼',
+                desc: '五十来岁，羽绒服把肚子顶得溜圆，油滑，当众羞辱人。',
+                traits: ['鼓胀羽绒服', '黑皮账本', '半包中华'],
+                views: { front: true, side: false, back: false },
+                prompt: 'Chinese construction foreman, 50s, round belly in puffer jacket, ledger book, sly expression' },
+              { id: 'CHAR-XIAOMA', name: '小马', role: '配角 · 技术员', emoji: '👨‍🔧',
+                desc: '二十多岁，技术员，图纸保管者，年轻气盛。',
+                traits: ['工装外套', '年轻'],
+                views: { front: true, side: false, back: false },
+                prompt: 'young Chinese technician, 20s, work jacket, holding blueprint' }
+            ],
+            scenes: [
+              { id: 'LOC-BANFANG', name: '工地板房', desc: '狭长板房，折叠桌，现金/账本/中华烟，昏白顶灯，门缝灌风。', prompt: 'cramped construction site prefab office, folding table, cash and ledger, dim fluorescent light' },
+              { id: 'LOC-MENKOU', name: '板房门口', desc: '门口大图纸四角被茶杯扳手压着，门外风大、塔吊影。', prompt: 'construction site entrance, large blueprint on table, windy, tower crane shadow' }
+            ],
+            props: [
+              { id: 'PROP-100', name: '一百块红票子', desc: '老蔡单独给的一百块，陈大年折成四折收进口袋——核心物证，后续打脸伏笔。' },
+              { id: 'PROP-DRAWING', name: '改造图纸', desc: '南锣会馆四合院改造项目，七架梁标"装饰，拆除"——集尾钩子。' },
+              { id: 'PROP-MOKUANG', name: '枣木墨斗', desc: '爷爷刻的"陈"字，三代传下，父亲临终交代"手艺不能断"的载体。' }
+            ]
+          },
+
+          storyboard: {
+            targetSeconds: 180,
+            shots: [
+              { id: 'SHOT-EP001-001', name: '小年工地板房', sceneId: 'EP001-SC001', duration: 4,
+                purpose: '交代时间地点与压抑氛围，立住陈大年的边缘位置。',
+                shotSize: '全景→中景', camera: '板房内侧向门口', movement: '缓慢推',
+                start: '狭长板房挤满工人，顶灯昏白', action: '镜头推进，陈大年贴门站着，门缝冷风灌入', end: '定格在陈大年挨门而立',
+                assets: 'CHAR-DANIAN,CHAR-BG', sound: '[画面文字]腊月二十三，小年。风声、人声嘈杂。' },
+              { id: 'SHOT-EP001-002', name: '点名发钱', sceneId: 'EP001-SC001', duration: 5,
+                purpose: '立住老蔡的掌控姿态与"钱在减少"的视觉压力。',
+                shotSize: '中景', camera: '过陈大年肩拍折叠桌', movement: '固定',
+                start: '桌上现金、账本、中华烟', action: '老蔡点名，工人上前领钱，现金摞变薄', end: '现金摞明显矮一截',
+                assets: 'CHAR-CAI,CHAR-BG,PROP-CASH', sound: '老蔡：跟我干的，亏待不了你们。' },
+              { id: 'SHOT-EP001-012', name: '满是茧的手', sceneId: 'EP001-SC001', duration: 4,
+                purpose: '全剧核心视觉锚点——劳动者的手，用身体细节立人。',
+                shotSize: '手部特写', camera: '顶光', movement: '固定',
+                start: '手悬在钱上方', action: '镜头给足指关节、厚茧、裂口黑泥', end: '手落向钱',
+                assets: 'CHAR-DANIAN(右手)', sound: '无对白，环境音压低' },
+              { id: 'SHOT-EP001-015', name: '说是一万这是一千', sceneId: 'EP001-SC001', duration: 4,
+                purpose: '反杀落定——一句话坐实老蔡撒谎，全场安静。',
+                shotSize: '近景', camera: '正面，全场虚焦', movement: '固定',
+                start: '陈大年把钱放回桌面', action: '他一字一句说出来', end: '屋里死寂',
+                assets: 'CHAR-DANIAN', sound: '陈大年：说是一万，这是一千。' },
+              { id: 'SHOT-EP001-025', name: '折成四折', sceneId: 'EP001-SC001', duration: 5,
+                purpose: '核心锚点——接过羞辱钱，郑重折好说谢谢，隐忍令人心疼。',
+                shotSize: '手部特写→近景', camera: '正面', movement: '固定',
+                start: '陈大年接过红票子', action: '当众折成四折，塞进上衣口袋，抬头道谢', end: '手离开口袋',
+                assets: 'CHAR-DANIAN,PROP-100', sound: '陈大年：谢蔡哥。折纸声。' },
+              { id: 'SHOT-EP001-032', name: '装饰，拆除', sceneId: 'EP001-SC002', duration: 5,
+                purpose: '集尾核心钩子——承重梁被误标为可拆的装饰。',
+                shotSize: '图纸标注特写', camera: '略俯', movement: '固定→推',
+                start: '梁架那一笔', action: '镜头推到标注文字', end: '文字定格，眉头皱起',
+                assets: 'PROP-DRAWING', sound: '[画面文字]正房七架梁：装饰，拆除。低频音效起。' },
+              { id: 'SHOT-EP001-042', name: '打柜子的操结构工程师的心', sceneId: 'EP001-SC002', duration: 8,
+                purpose: '集尾羞辱高潮——当众否定主角专业身份，"正月十六"二次收钩。',
+                shotSize: '中景', camera: '老蔡卷图指人', movement: '固定',
+                start: '老蔡招呼众人', action: '卷起图纸夹腋下，手指点着陈大年逐句羞辱', end: '陈大年沉默',
+                assets: 'CHAR-CAI,CHAR-DANIAN,PROP-DRAWING,CHAR-BG', sound: '老蔡：你一个打柜子的，操上结构工程师的心了？' },
+              { id: 'SHOT-EP001-049', name: '没再回头', sceneId: 'EP001-SC002', duration: 4,
+                purpose: '集尾停在人物背影与未解决的隐患上——开放性钩子。',
+                shotSize: '远景', camera: '人物背对镜头', movement: '缓慢拉远',
+                start: '陈大年顶风向前走', action: '他走远，没有回头，人与效果图同框', end: '人影渐小，淡出',
+                assets: 'CHAR-DANIAN,LOOK-WIND', sound: '风声渐强后渐收。' }
+            ],
+            fullTotal: 214, fullCount: 49
+          },
+
+          generate: {
+            tasks: [
+              { id: 'gen_1', shotId: 'SHOT-EP001-001', name: '小年工地板房', type: 'video', model: 'Seedance', status: 'done', progress: 100,
+                prompt: '9:16 vertical, cramped construction prefab office, dim light, workers gathered, a carpenter standing by the door, cinematic', createdAt: now() },
+              { id: 'gen_2', shotId: 'SHOT-EP001-012', name: '满是茧的手', type: 'image', model: '即梦', status: 'done', progress: 100,
+                prompt: '9:16, extreme close-up of weathered carpenter hands with thick calluses, top light, cinematic', createdAt: now() },
+              { id: 'gen_3', shotId: 'SHOT-EP001-025', name: '折成四折', type: 'video', model: 'Seedance', status: 'running', progress: 62,
+                prompt: '9:16, close-up, hands folding a 100 yuan note into quarters and pocketing it, emotional', createdAt: now() },
+              { id: 'gen_4', shotId: 'SHOT-EP001-032', name: '装饰，拆除', type: 'image', model: '即梦', status: 'queued', progress: 0,
+                prompt: '9:16 close-up of architectural blueprint annotation, text "装饰，拆除", shallow depth of field', createdAt: now() },
+              { id: 'gen_5', shotId: 'SHOT-EP001-042', name: '集尾羞辱', type: 'video', model: 'LibTV', status: 'queued', progress: 0,
+                prompt: '9:16, foreman rolling up blueprint and pointing at carpenter, mockery, group of workers', createdAt: now() }
+            ]
+          },
+
+          edit: {
+            clips: [
+              { id: 'clip_1', shotId: 'SHOT-EP001-001', name: '小年工地板房', duration: 4, color: '#ff6b35', track: 'V1', transition: '硬切' },
+              { id: 'clip_2', shotId: 'SHOT-EP001-002', name: '点名发钱', duration: 5, color: '#ff9d3d', track: 'V1', transition: '叠化' },
+              { id: 'clip_3', shotId: 'SHOT-EP001-012', name: '满是茧的手', duration: 4, color: '#9b7bff', track: 'V1', transition: '硬切' },
+              { id: 'clip_4', shotId: 'SHOT-EP001-015', name: '说是一万这是一千', duration: 4, color: '#5aa9ff', track: 'V1', transition: '硬切' },
+              { id: 'clip_5', shotId: 'SHOT-EP001-025', name: '折成四折', duration: 5, color: '#3ecfb0', track: 'V1', transition: '叠化' },
+              { id: 'clip_6', shotId: 'SHOT-EP001-032', name: '装饰，拆除', duration: 5, color: '#ffc94d', track: 'V1', transition: '推近' }
+            ],
+            subtitles: true,
+            bgm: '低沉弦乐 · 市井氛围'
+          },
+
+          export: {
+            settings: { resolution: '1080×1920', fps: '30', format: 'MP4', bitrate: '高', ratio: '9:16 竖屏' },
+            records: [
+              { id: 'exp_1', name: 'EP001_一百块_v1', time: now(), settings: '1080×1920 · 30fps · MP4', status: 'done', size: '186 MB' }
+            ]
+          },
+
+          assets: [
+            { id: 'as_1', type: 'image', name: '陈大年·正面', emoji: '👷', from: '设定中枢', time: now() },
+            { id: 'as_2', type: 'image', name: '满是茧的手', emoji: '✋', from: 'SHOT-012', time: now() },
+            { id: 'as_3', type: 'video', name: '小年工地板房', emoji: '🎬', from: 'SHOT-001', time: now() },
+            { id: 'as_4', type: 'video', name: '点名发钱', emoji: '🎞️', from: 'SHOT-002', time: now() },
+            { id: 'as_5', type: 'audio', name: '板房环境音', emoji: '🔊', from: '音效库', time: now() }
+          ]
+        },
+
+        {
+          id: p2,
+          name: '新闻热点：夜市经济观察',
+          type: 'news',
+          emoji: '📰',
+          cover: 'linear-gradient(135deg,#5aa9ff,#2c5fa8)',
+          createdAt: now(),
+          updatedAt: now(),
+          script: { source: '', title: '未命名', targetSeconds: 90, estimatedSeconds: 0, voicedChars: 0, scenes: [] },
+          setup: { characters: [], scenes: [], props: [] },
+          storyboard: { targetSeconds: 90, shots: [], fullTotal: 0, fullCount: 0 },
+          generate: { tasks: [] },
+          edit: { clips: [], subtitles: true, bgm: '' },
+          export: { settings: { resolution: '1080×1920', fps: '30', format: 'MP4', bitrate: '高', ratio: '9:16 竖屏' }, records: [] },
+          assets: []
+        }
+      ]
+    };
+  }
+
+  // ---------- 读写 ----------
+  let db;
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) { db = JSON.parse(raw); return db; }
+    } catch (e) { console.warn('读取失败，重建种子', e); }
+    db = seedData();
+    save();
+    return db;
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(db)); return true; }
+    catch (e) { console.error('保存失败', e); return false; }
+  }
+  function getDB() { return db || load(); }
+  function activeProject() {
+    const d = getDB();
+    return d.projects.find(p => p.id === d.activeProjectId) || d.projects[0];
+  }
+  function setActive(id) { getDB().activeProjectId = id; save(); }
+
+  // ---------- 项目 CRUD ----------
+  function emptyProject(name, type) {
+    const covers = ['linear-gradient(135deg,#ff6b35,#c2410c)', 'linear-gradient(135deg,#9b7bff,#5b3fbf)', 'linear-gradient(135deg,#3ecfb0,#187a63)', 'linear-gradient(135deg,#5aa9ff,#2c5fa8)'];
+    return {
+      id: uid('proj'), name, type,
+      emoji: type === 'novel' ? '📖' : type === 'news' ? '📰' : '💡',
+      cover: covers[Math.floor(Math.random() * covers.length)],
+      createdAt: now(), updatedAt: now(),
+      script: { source: '', title: '未命名', targetSeconds: 90, estimatedSeconds: 0, voicedChars: 0, scenes: [] },
+      setup: { characters: [], scenes: [], props: [] },
+      storyboard: { targetSeconds: 90, shots: [], fullTotal: 0, fullCount: 0 },
+      generate: { tasks: [] },
+      edit: { clips: [], subtitles: true, bgm: '' },
+      export: { settings: { resolution: '1080×1920', fps: '30', format: 'MP4', bitrate: '高', ratio: '9:16 竖屏' }, records: [] },
+      assets: []
+    };
+  }
+  function addProject(name, type) {
+    const p = emptyProject(name, type);
+    getDB().projects.unshift(p);
+    getDB().activeProjectId = p.id;
+    save(); return p;
+  }
+  function deleteProject(id) {
+    const d = getDB();
+    d.projects = d.projects.filter(p => p.id !== id);
+    if (d.activeProjectId === id) d.activeProjectId = d.projects[0] ? d.projects[0].id : null;
+    save();
+  }
+  function updateProject(id, patch) {
+    const d = getDB();
+    const p = d.projects.find(x => x.id === id);
+    if (!p) return null;
+    if (patch.name != null) p.name = patch.name;
+    if (patch.type != null) p.type = patch.type;
+    if (patch.emoji != null) p.emoji = patch.emoji;
+    p.updatedAt = now();
+    save();
+    return p;
+  }
+
+  // ---------- 导入导出备份 ----------
+  function exportBackup() { return JSON.stringify(getDB(), null, 2); }
+  function importBackup(json) {
+    const parsed = JSON.parse(json);
+    if (!parsed.projects || !Array.isArray(parsed.projects)) throw new Error('格式不正确');
+    db = parsed; save(); return true;
+  }
+  function resetToSeed() { db = seedData(); save(); }
+
+  // ---------- 项目完成度 ----------
+  function progress(p) {
+    let n = 0, total = 7;
+    if (p.script && (p.script.scenes.length || p.script.content)) n++;
+    if (p.setup && (p.setup.characters.length || p.setup.scenes.length)) n++;
+    if (p.storyboard && p.storyboard.shots.length) n++;
+    if (p.generate && p.generate.tasks.length) n++;
+    if (p.edit && p.edit.clips.length) n++;
+    if (p.export && p.export.records.length) n++;
+    if (p.assets && p.assets.length) n++;
+    return Math.round(n / total * 100);
+  }
+
+  return {
+    uid, now, fmtTime, load, save, getDB, activeProject, setActive,
+    addProject, deleteProject, updateProject, exportBackup, importBackup, resetToSeed, progress,
+    emptyProject
+  };
+})();
+
+</script>
+<script>
+/* ============================================================
+   猩猩导演台 · 云服务封装（真 AI · 免密钥 LLM）
+   基于 @tencent-ai/workbuddy-cloud-sdk（CDN 全局 WorkBuddyCloud）
+   注意：endpoint / publishableKey 为前端公开配置，可随源码发布。
+   ============================================================ */
+
+const CloudAI = (() => {
+  // publicConfig（应用公开配置，发布后随站点生效；前端允许持有）
+  const PUBLIC_CONFIG = {
+    endpoint: 'https://gorilla-studio.app.workbuddy.host',
+    oauthRelayBaseUrl: 'https://www.workbuddy.cn/v2/as/genie-baas/oauth',
+    publishableKey: 'wbpk_xEeft67F87d0p9Y5hdACw0_Wu5zes12D01WQL4AjqjqK2WjhAsAppd4',
+  };
+
+  let cloud = null;
+  let modelCache = null;
+  let available = false;
+
+  function init() {
+    try {
+      const SDK = window.WorkBuddyCloud;
+      if (!SDK || !SDK.createWorkBuddyCloud) { available = false; return false; }
+      cloud = SDK.createWorkBuddyCloud(PUBLIC_CONFIG);
+      available = true;
+      return true;
+    } catch (e) {
+      console.warn('[CloudAI] init failed', e);
+      available = false;
+      return false;
+    }
+  }
+
+  async function models() {
+    if (!available && !init()) throw new Error('AI 服务未就绪');
+    if (modelCache) return modelCache;
+    const list = await cloud.llm.models.list();
+    modelCache = (list || []).filter(m => m.disabled !== true);
+    if (!modelCache.length) throw new Error('当前没有可用的 AI 模型');
+    return modelCache;
+  }
+
+  // 统一的流式收集（one-shot 也走 stream，SDK 不支持非流式）
+  async function ask(systemPrompt, userPrompt, opts = {}) {
+    const ms = await models();
+    const model = ms.find(m => m.id === (opts.modelId || 'auto')) || ms[0];
+    let out = '';
+    const controller = new AbortController();
+    if (opts.timeoutMs) setTimeout(() => controller.abort(), opts.timeoutMs);
+    for await (const chunk of cloud.llm.chat.completions.create({
+      model: model.id,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      stream: true,
+      temperature: opts.temperature != null ? opts.temperature : 0.8,
+      signal: controller.signal,
+    })) {
+      const d = chunk && chunk.choices && chunk.choices[0] && chunk.choices[0].delta;
+      if (d && d.content) out += d.content;
+      if (opts.onChunk) opts.onChunk(out);
+    }
+    return out;
+  }
+
+  // ---- 业务级生成 ----
+  const SYS_SCRIPT = '你是资深短剧编剧。把给定素材改编成竖屏短剧剧本。只输出 Markdown，不要解释。格式：以「## EP001-SC001 场景名」分场景，场景内用「角色名：台词」写对白，动作用独立段落，制作标记用[画面文字]/[SFX]。开场5秒内进冲突，每场结尾留钩子。台词口语化、有地域质感，不写秒数。';
+
+  const SYS_STORYBOARD = '你是短剧分镜师。把剧本拆成竖屏9:16逐镜分镜。只输出 Markdown，不要解释。每个镜头格式固定：以「## SHOT-EP001-NNN · 镜头名」开头，下面依次是 - 来源：、- 时长：Ns（3-8秒）、- 目的：、- 景别/机位：、- 运镜：、- 起点：、- 动作：、- 终点：、- 出场设定：、- 声音：。逐镜完整，末尾加「## 整集汇总」写镜头数与秒数加总。';
+
+  const SYS_PROMPT = '你是 AI 视频/图片生成提示词专家。把镜头描述改写成英文提示词，用于即梦/Seedance 等工具。输出单行：9:16 vertical, 主体外貌与服装, 动作, 场景与光线, cinematic, 镜头语言。只输出提示词本身。';
+
+  async function generateScript(source, type, seconds, onChunk) {
+    const kind = { novel: '小说', news: '新闻热点', idea: '一句话创意' }[type] || '文字素材';
+    const user = `素材类型：${kind}\n目标时长：约 ${seconds || 90} 秒\n\n素材内容：\n${String(source || '').slice(0, 4000)}\n\n请改编成短剧剧本。`;
+    return ask(SYS_SCRIPT, user, { onChunk, temperature: 0.85 });
+  }
+
+  async function generateStoryboard(scriptText, seconds, onChunk) {
+    const user = `目标集长：约 ${seconds || 90} 秒\n\n剧本：\n${String(scriptText || '').slice(0, 6000)}\n\n请拆成分镜。`;
+    return ask(SYS_STORYBOARD, user, { onChunk, temperature: 0.7 });
+  }
+
+  async function generatePrompt(shot, characters, onChunk) {
+    const refs = (characters || []).map(c => `${c.name}=${c.prompt || c.desc || ''}`).join('; ');
+    const user = `镜头：${shot.name || ''}\n画面：${shot.action || ''}\n景别/机位：${shot.shotSize || ''}\n出场设定：${shot.assets || ''}\n角色参考：${refs}\n\n请写英文生成提示词。`;
+    return ask(SYS_PROMPT, user, { onChunk, temperature: 0.6 });
+  }
+
+  return {
+    init, models,
+    generateScript, generateStoryboard, generatePrompt,
+    get available() { return available; },
+    get modelCount() { return modelCache ? modelCache.length : 0; },
+  };
+})();
+
+</script>
+<script>
+/* ============================================================
+   猩猩导演台 · 一键导入桥
+   把 script-to-screenplay 技能的产物解析成导演台数据结构。
+   靠内容特征自动识别文件类型，不依赖文件名。
+   ============================================================ */
+
+const Bridge = (() => {
+  const splitLine = line => line.replace(/^[-*]\s*/, '').split(/[｜|]/).map(s => s.trim()).filter(Boolean);
+
+  function classify(name, text) {
+    const n = (name || '').toLowerCase();
+    if (n.includes('配置') || n.endsWith('.json')) return 'config';
+    if (/素材事实表|原始输入摘要|本集切入/.test(text)) return 'facts';
+    if (/设定清单|##\s*人物[\s\S]*##\s*场景/.test(text)) return 'setup';
+    if (/^##\s+SHOT-/m.test(text)) return 'storyboard';
+    if (/^##\s+EP\d+-SC\d+/m.test(text)) return 'script';
+    return 'unknown';
+  }
+
+  // 设定清单：人物/场景/道具
+  function parseSetup(text) {
+    const out = { characters: [], scenes: [], props: [] };
+    let section = null;
+    text.split('\n').forEach(raw => {
+      const line = raw.trim();
+      if (/^##\s*人物/.test(line)) { section = 'characters'; return; }
+      if (/^##\s*场景/.test(line)) { section = 'scenes'; return; }
+      if (/^##\s*道具/.test(line)) { section = 'props'; return; }
+      if (/^##\s*造型/.test(line)) { section = null; return; }
+      if (!section || !/^[-*]\s/.test(line)) return;
+      const parts = splitLine(line);
+      if (parts.length < 2) return;
+      const [id, name, ...rest] = parts;
+      const desc = rest.join(' ｜ ').replace(/^控制[：:]\s*/, '').replace(/\s*[｜|]\s*控制[：:].*$/, '').trim();
+      const control = (line.match(/控制[：:]\s*([^\n]+)/) || [])[1] || '';
+      if (section === 'characters') {
+        out.characters.push({
+          id: id.replace(/[^A-Za-z0-9_-]/g, ''), name,
+          role: '', desc: desc || control, emoji: '👤',
+          traits: control ? control.split(/[、,，]/).map(x => x.trim()).filter(Boolean).slice(0, 6) : [],
+          prompt: `${name}, ${desc}`.slice(0, 240),
+          views: { front: false, side: false, back: false },
+        });
+      } else if (section === 'scenes') {
+        out.scenes.push({ id: id.replace(/[^A-Za-z0-9_-]/g, ''), name, desc: desc || control, prompt: `${name}, ${desc}`.slice(0, 240) });
+      } else {
+        out.props.push({ id: id.replace(/[^A-Za-z0-9_-]/g, ''), name, desc: desc || control });
+      }
+    });
+    return out;
+  }
+
+  // 剧本：按 ## EP###-SC### 切场景
+  function parseScript(text) {
+    const blocks = text.split(/^##\s+(EP\d+-SC\d+)/m);
+    const scenes = [];
+    for (let i = 1; i < blocks.length; i += 2) {
+      const id = blocks[i].trim();
+      const body = (blocks[i + 1] || '').trim();
+      const firstLine = body.split('\n')[0].trim();
+      const loc = firstLine.replace(/^[内外\s·\/]+/, '').split('·').map(s => s.trim()).filter(Boolean);
+      scenes.push({
+        id,
+        location: (loc[0] || '场景').slice(0, 24),
+        time: (loc[1] || '').slice(0, 20),
+        content: body,
+      });
+    }
+    return scenes;
+  }
+
+  // 分镜：按 ## SHOT- 切镜
+  function parseStoryboard(text) {
+    const blocks = text.split(/^##\s+(SHOT-?[\w-]+)/mi);
+    const shots = [];
+    for (let i = 1; i < blocks.length; i += 2) {
+      let head = blocks[i].trim();
+      const body = blocks[i + 1] || '';
+      if (!/^SHOT-/i.test(head)) head = 'SHOT-' + head;
+      const name = (head.split('·').pop() || head).trim();
+      const get = k => { const m = body.match(new RegExp('-\\s*' + k + '[：:]\\s*([^\\n]+)')); return m ? m[1].trim() : ''; };
+      const durMatch = (get('时长').match(/(\d+)/) || [])[1];
+      const srcLine = get('来源');
+      const srId = (srcLine.match(/EP\d+-SC\d+/) || [''])[0];
+      shots.push({
+        id: head.replace(/[^\w-]/g, ''), name, sceneId: srId || 'EP001-SC001',
+        duration: parseInt(durMatch || '3', 10),
+        purpose: get('目的'), shotSize: get('景别/机位') || get('景别') || '中景',
+        camera: '', movement: get('运镜') || '固定',
+        start: get('起点'), action: get('动作'), end: get('终点'),
+        assets: get('出场设定'), sound: get('声音'),
+      });
+    }
+    const total = shots.reduce((a, s) => a + s.duration, 0);
+    return { shots, fullTotal: total, fullCount: shots.length };
+  }
+
+  // 素材事实表：取摘要 + 核心冲突做 source
+  function parseFacts(text) {
+    const grab = label => {
+      const m = text.match(new RegExp(label + '[：:]\\s*([^\\n]+)'));
+      return m ? m[1].trim() : '';
+    };
+    const summary = grab('原始输入摘要') || grab('原始输入');
+    const conflict = grab('核心冲突');
+    return [summary, conflict].filter(Boolean).join('\n');
+  }
+
+  function parseConfig(text) {
+    try {
+      const j = JSON.parse(text);
+      return {
+        seconds: j.format?.target_seconds_per_episode || 90,
+        ratio: j.format?.aspect_ratio || '9:16',
+        production: j.format?.production || 'live_action',
+      };
+    } catch (e) { return { seconds: 90, ratio: '9:16', production: 'live_action' }; }
+  }
+
+  /**
+   * 解析一批文件 {name, content}[]
+   * 返回 { ok, project 片段, report }
+   */
+  function parseBundle(files) {
+    const buckets = { config: [], facts: [], setup: [], script: [], storyboard: [], unknown: [] };
+    files.forEach(f => {
+      const kind = classify(f.name, f.content);
+      buckets[kind].push(f);
+    });
+
+    const result = {
+      script: null, setup: null, storyboard: null, config: null,
+      report: [],
+    };
+
+    if (buckets.config.length) { result.config = parseConfig(buckets.config[0].content); result.report.push('✓ 配置（' + buckets.config[0].name + '）'); }
+    if (buckets.facts.length) { result.factText = parseFacts(buckets.facts[0].content); result.report.push('✓ 素材事实表'); }
+    if (buckets.setup.length) {
+      const s = parseSetup(buckets.setup[0].content);
+      if (s.characters.length || s.scenes.length || s.props.length) {
+        result.setup = s;
+        result.report.push(`✓ 设定清单（人物${s.characters.length}·场景${s.scenes.length}·道具${s.props.length}）`);
+      }
+    }
+    if (buckets.script.length) {
+      const scenes = parseScript(buckets.script[0].content);
+      if (scenes.length) { result.scriptScenes = scenes; result.report.push(`✓ 剧本（${scenes.length} 场）`); }
+    }
+    if (buckets.storyboard.length) {
+      const sb = parseStoryboard(buckets.storyboard[0].content);
+      if (sb.shots.length) { result.storyboard = sb; result.report.push(`✓ 分镜（${sb.shots.length} 镜 · ${sb.fullTotal}s）`); }
+    }
+    if (buckets.unknown.length) result.report.push('○ 未识别：' + buckets.unknown.map(f => f.name).join('、'));
+
+    result.ok = !!(result.scriptScenes || result.storyboard || result.setup);
+    return result;
+  }
+
+  /** 把解析结果写入项目对象 */
+  function applyToProject(p, parsed) {
+    const changes = [];
+    if (parsed.config) {
+      p.script.targetSeconds = parsed.config.seconds;
+      p.storyboard.targetSeconds = parsed.config.seconds;
+      if (parsed.config.ratio) p.export.settings.ratio = parsed.config.ratio.includes('9:16') ? '9:16 竖屏' : parsed.config.ratio;
+      changes.push('目标时长/画幅');
+    }
+    if (parsed.factText) { p.script.source = parsed.factText; changes.push('素材摘要'); }
+    if (parsed.scriptScenes && parsed.scriptScenes.length) {
+      p.script.scenes = parsed.scriptScenes;
+      if (!p.script.title || p.script.title === '未命名') p.script.title = parsed.scriptScenes[0].id;
+      changes.push('剧本场景');
+    }
+    if (parsed.setup) {
+      if (parsed.setup.characters.length) p.setup.characters = parsed.setup.characters;
+      if (parsed.setup.scenes.length) p.setup.scenes = parsed.setup.scenes;
+      if (parsed.setup.props.length) p.setup.props = parsed.setup.props;
+      changes.push('设定');
+    }
+    if (parsed.storyboard && parsed.storyboard.shots.length) {
+      p.storyboard.shots = parsed.storyboard.shots;
+      p.storyboard.fullTotal = parsed.storyboard.fullTotal;
+      p.storyboard.fullCount = parsed.storyboard.fullCount;
+      changes.push('分镜');
+    }
+    p.updatedAt = new Date().toISOString();
+    return changes;
+  }
+
+  return { parseBundle, applyToProject, classify };
+})();
+
+</script>
+<script>
+/* ============================================================
+   猩猩导演台 · 主应用逻辑
+   ============================================================ */
+
+(() => {
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const nl2br = s => esc(s).replace(/\n/g, '<br>');
+  const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+
+  let currentView = 'projects';
+  let db;
+  let saveTimer = null;
+
+  const TYPE_LABEL = { novel: '小说改编', news: '新闻热点', idea: '一句话创意' };
+  const VIEW_TITLE = {
+    projects: ['项目台', '所有创作项目的总览。每个项目是一条从文字到成片的完整流水线。'],
+    script: ['剧本工坊', '从文字素材到结构化剧本。输入小说片段、新闻或一句话，生成带场景编号的剧本正本。'],
+    setup: ['设定中枢', '人物三视图、场景与道具的稳定设定，供分镜与生成引用，保证跨镜一致性。'],
+    storyboard: ['分镜台', '把剧本切成逐镜画面，标注时长、景别、运镜与声音，并汇总整集时长。'],
+    generate: ['生成工场', '按镜生成图片与视频的任务队列看板。原型中用模拟进度演示状态流转。'],
+    edit: ['剪辑台', '时间线剪辑：片段排序、转场、字幕与配乐，所见即所得地拼成成片。'],
+    export: ['导出中心', '设置分辨率、帧率与格式，生成成片并留存导出记录。'],
+    assets: ['资产库', '全流程沉淀的可复用资产：角色图、场景图、视频片段与音频。']
+  };
+
+  // ============ 初始化 ============
+  function init() {
+    db = Store.load();
+    if (window.CloudAI) CloudAI.init();
+    bindGlobal();
+    render();
+  }
+
+  function refresh() { db = Store.getDB(); }
+
+  function scheduleSave() {
+    setSaveState(true);
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { Store.save(); setSaveState(false); }, 400);
+  }
+  function setSaveState(saving) {
+    const el = $('#saveState');
+    el.classList.toggle('saving', saving);
+    $('#ssText').textContent = saving ? '保存中…' : '已保存';
+  }
+
+  // ============ 全局事件 ============
+  function bindGlobal() {
+    $('#navList').parentElement.addEventListener('click', e => {
+      const item = e.target.closest('.nav-item');
+      if (!item) return;
+      currentView = item.dataset.view;
+      render();
+    });
+    $('#brand').addEventListener('click', () => confirmReset());
+
+    $('#projectSwitcher').addEventListener('click', e => {
+      e.stopPropagation();
+      const item = e.target.closest('[data-act]');
+      if (item) {
+        const act = item.dataset.act;
+        $('#psMenu').classList.remove('open');
+        if (act === 'switch-project') {
+          Store.setActive(item.dataset.id); currentView = 'projects'; render(); toast('已切换项目', 'ok');
+        } else if (act === 'new-project') {
+          modalNewProject();
+        } else if (act === 'edit-project') {
+          modalEditProject(item.dataset.id);
+        } else if (act === 'del-project') {
+          modalDelProject(item.dataset.id);
+        }
+        return;
+      }
+      $('#psMenu').classList.toggle('open');
+    });
+    document.addEventListener('click', () => $('#psMenu').classList.remove('open'));
+
+    $('#btnExportData').addEventListener('click', () => {
+      const blob = new Blob([Store.exportBackup()], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '猩猩导演台_备份_' + new Date().toISOString().slice(0, 10) + '.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast('已导出全部数据备份', 'ok');
+    });
+    $('#btnImportData').addEventListener('click', () => $('#importFile').click());
+    $('#importFile').addEventListener('change', e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = () => {
+        try { Store.importBackup(r.result); refresh(); render(); toast('数据已恢复', 'ok'); }
+        catch (err) { toast('恢复失败：' + err.message, 'err'); }
+      };
+      r.readAsText(f);
+      e.target.value = '';
+    });
+
+    $('#modalClose').addEventListener('click', closeModal);
+    $('#modalBackdrop').addEventListener('click', e => { if (e.target === $('#modalBackdrop')) closeModal(); });
+  }
+
+  // ============ 渲染主入口 ============
+  function render() {
+    refresh();
+    renderTopbar();
+    renderNav();
+    const ws = $('#workspace');
+    const map = {
+      projects: viewProjects, script: viewScript, setup: viewSetup,
+      storyboard: viewStoryboard, generate: viewGenerate, edit: viewEdit,
+      export: viewExport, assets: viewAssets
+    };
+    ws.innerHTML = (map[currentView] || viewProjects)();
+    ws.scrollTop = 0;
+    bindViewEvents();
+  }
+
+  function renderTopbar() {
+    const p = Store.activeProject();
+    $('#psName').textContent = p ? p.name : '暂无项目';
+    // 填充项目切换下拉（此前只 toggle 空菜单，导致点击无反应）
+    const menu = $('#psMenu');
+    if (menu) {
+      const activeId = p ? p.id : null;
+      let mh = db.projects.map(item =>
+        `<div class="ps-menu-item ${item.id === activeId ? 'active' : ''}" data-act="switch-project" data-id="${item.id}">
+          <span class="pmi-emoji">${item.emoji || '▦'}</span>
+          <span class="pmi-name">${esc(item.name)}</span>
+          <button class="pmi-op" data-act="edit-project" data-id="${item.id}" title="重命名 / 换图标">✎</button>
+          <button class="pmi-op pmi-op-del" data-act="del-project" data-id="${item.id}" title="删除项目">✕</button>
+          ${item.id === activeId ? '<span class="pmi-check">✓</span>' : ''}
+        </div>`).join('');
+      mh += `<div class="ps-menu-sep"></div>
+        <div class="ps-menu-item" data-act="new-project"><span class="pmi-emoji">＋</span><span class="pmi-name">新建项目</span></div>`;
+      menu.innerHTML = mh;
+    }
+  }
+  function renderNav() {
+    const p = Store.activeProject();
+    $$('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === currentView));
+    $('#numProjects').textContent = db.projects.length;
+    $('#numSetup').textContent = p ? p.setup.characters.length + p.setup.scenes.length + p.setup.props.length : 0;
+    $('#numShots').textContent = p ? p.storyboard.shots.length : 0;
+    $('#numTasks').textContent = p ? p.generate.tasks.length : 0;
+    $('#numAssets').textContent = p ? p.assets.length : 0;
+
+    // 流水线进度点
+    const steps = [
+      { k: 'script', done: !!(p && (p.script.scenes.length || p.script.content)) },
+      { k: 'setup', done: !!(p && (p.setup.characters.length || p.setup.scenes.length)) },
+      { k: 'storyboard', done: !!(p && p.storyboard.shots.length) },
+      { k: 'generate', done: !!(p && p.generate.tasks.length) },
+      { k: 'edit', done: !!(p && p.edit.clips.length) },
+      { k: 'export', done: !!(p && p.export.records.length) }
+    ];
+    const order = ['script', 'setup', 'storyboard', 'generate', 'edit', 'export'];
+    let firstUndone = steps.findIndex(s => !s.done);
+    $('#pipeSteps').innerHTML = steps.map((s, i) => {
+      const isCurrent = i === firstUndone;
+      const line = i < steps.length - 1 ? `<div class="pipe-line ${s.done ? 'done' : ''}"></div>` : '';
+      return `<div class="pipe-step"><div class="pipe-node ${s.done ? 'done' : ''} ${isCurrent ? 'current' : ''}" title="${VIEW_TITLE[s.k][0]}">${s.done ? '✓' : '·'}</div>${line}</div>`;
+    }).join('');
+  }
+
+  function headHtml(view, actions = '') {
+    const [title, desc] = VIEW_TITLE[view];
+    return `<div class="view-head"><div><div class="eyebrow">Gorilla Studio</div>
+      <div class="view-title">${title}</div><div class="view-desc">${desc}</div></div>
+      <div class="view-head-actions" id="headActions">${actions}</div></div>`;
+  }
+
+  // 无项目时的占位
+  function noProject() {
+    return `${headHtml(currentView)}<div class="empty"><div class="e-ico">🦍</div>
+      <div class="e-title">还没有项目</div>
+      <div class="e-desc">先到「项目台」新建一个项目，开启创作流水线。</div>
+      <button class="btn btn-primary" data-act="goto-projects">去项目台</button></div>`;
+  }
+
+  // ============ ① 项目台 ============
+  function viewProjects() {
+    const totalShots = db.projects.reduce((a, p) => a + p.storyboard.shots.length, 0);
+    const totalAssets = db.projects.reduce((a, p) => a + p.assets.length, 0);
+    const avgProg = db.projects.length ? Math.round(db.projects.reduce((a, p) => a + Store.progress(p), 0) / db.projects.length) : 0;
+    let html = headHtml('projects');
+    html += `<div class="stat-row">
+      ${statBox('▦', 'var(--brand)', '项目总数', db.projects.length, '个', 'projects')}
+      ${statBox('▤', 'var(--violet)', '分镜总数', totalShots, '镜', 'storyboard')}
+      ${statBox('▣', 'var(--teal)', '资产沉淀', totalAssets, '件', 'assets')}
+      ${statBox('◔', 'var(--blue)', '平均进度', avgProg, '%', 'script')}
+    </div>`;
+    html += `<div class="card card-pad" style="margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-primary" data-act="new-project">＋ 新建项目</button>
+      <span style="color:var(--txt-3);font-size:11px">或从小说 / 新闻热点 / 一句话创意起步</span></div>`;
+
+    if (!db.projects.length) {
+      html += `<div class="empty"><div class="e-ico">▦</div><div class="e-title">项目台是空的</div>
+        <div class="e-desc">新建一个项目，把你的想法从文字一路做到成片。</div></div>`;
+      return html;
+    }
+    html += '<div class="grid g-4">';
+    db.projects.forEach(p => {
+      const prog = Store.progress(p);
+      html += `<div class="proj-card" data-act="open-project" data-id="${p.id}">
+        <div class="proj-cover" style="background:${p.cover}">
+          <span class="pc-badge tag" style="background:rgba(0,0,0,.35);color:#fff">${TYPE_LABEL[p.type] || p.type}</span>
+          <div class="pc-ops">
+            <button class="pc-op" data-act="edit-project" data-id="${p.id}" title="重命名 / 换图标">✎</button>
+            <button class="pc-op pc-op-del" data-act="del-project" data-id="${p.id}" title="删除项目">✕</button>
+          </div>
+          ${p.emoji}
+        </div>
+        <div class="proj-body">
+          <div class="proj-name">${esc(p.name)}</div>
+          <div class="proj-meta">${p.script.title !== '未命名' ? esc(p.script.title) + ' · ' : ''}更新于 ${Store.fmtTime(p.updatedAt)}</div>
+          <div class="proj-progress"><div class="progress-track"><div class="progress-fill" style="width:${prog}%"></div></div><span class="pct">${prog}%</span></div>
+          <div class="proj-foot">
+            <span class="proj-chip proj-chip-btn" data-act="proj-goto" data-id="${p.id}" data-view="script" title="进入剧本工坊">✎ 剧本 ${p.script.scenes.length}</span>
+            <span class="proj-chip proj-chip-btn" data-act="proj-goto" data-id="${p.id}" data-view="setup" title="进入设定中枢">◈ 设定 ${p.setup.characters.length}</span>
+            <span class="proj-chip proj-chip-btn" data-act="proj-goto" data-id="${p.id}" data-view="storyboard" title="进入分镜台">▤ 分镜 ${p.storyboard.shots.length}</span>
+            <span class="proj-chip proj-chip-btn" data-act="proj-goto" data-id="${p.id}" data-view="generate" title="进入生成工场">✦ 生成 ${p.generate.tasks.length}</span>
+          </div>
+        </div></div>`;
+    });
+    html += '</div>';
+    return html;
+  }
+  function statBox(ico, color, label, val, unit, view) {
+    return `<div class="stat-box" data-act="goto-view" data-view="${view}" title="进入${VIEW_TITLE[view] ? VIEW_TITLE[view][0] : view}">
+      <div class="stat-label"><span class="stat-ico" style="background:${color}22;color:${color}">${ico}</span>${label}</div>
+      <div class="stat-val">${val}<small>${unit}</small></div>
+      <div class="stat-go">进入 →</div></div>`;
+  }
+
+  // ============ ② 剧本工坊 ============
+  function viewScript() {
+    const p = Store.activeProject(); if (!p) return noProject();
+    let html = headHtml('script');
+    html += `<div class="script-layout">
+      <div>
+        <div class="card card-pad">
+          <div class="card-head" style="padding:0 0 14px;margin-bottom:14px"><h3>素材输入</h3><span class="spacer"></span>
+            <select class="select" id="sourceType" style="width:auto;padding:6px 28px 6px 10px">
+              <option value="novel" ${p.type === 'novel' ? 'selected' : ''}>小说片段</option>
+              <option value="news" ${p.type === 'news' ? 'selected' : ''}>新闻热点</option>
+              <option value="idea" ${p.type === 'idea' ? 'selected' : ''}>一句话创意</option>
+            </select></div>
+          <div class="field"><label>把你的文字素材粘到这里</label>
+            <textarea class="textarea source-area" id="sourceInput" placeholder="粘贴小说章节、新闻正文，或写下一句话创意……">${esc(p.script.source)}</textarea></div>
+          <div class="script-toolbar">
+            <button class="btn btn-primary btn-sm" data-act="gen-script">✎ AI 生成剧本</button>
+            <button class="btn btn-ghost btn-sm" data-act="save-source">保存素材</button>
+          </div>
+          <div class="bridge-strip">
+            <div class="bridge-strip-title">⇩ 从导演技能一键导入</div>
+            <div class="bridge-strip-desc">把 script-to-screenplay 产出的 剧本.md / 分镜.md / 设定清单.md / 素材事实表.md / 配置.json 一次导入，自动归入各分区。</div>
+            <button class="btn btn-outline btn-sm" data-act="bridge-import">一键导入技能产物</button>
+          </div>
+        </div>
+        <div class="card card-pad" style="margin-top:16px">
+          <div class="card-head" style="padding:0 0 12px"><h3>集参数</h3></div>
+          <div class="row">
+            <div class="field"><label>集名</label><input class="input" id="scriptTitle" value="${esc(p.script.title)}"></div>
+            <div class="field"><label>目标时长（秒）</label><input class="input" type="number" id="targetSec" value="${p.script.targetSeconds}"></div>
+          </div>
+          <button class="btn btn-ghost btn-sm" data-act="save-script-meta">保存参数</button>
+        </div>
+      </div>
+      <div>
+        <div class="metric-inline">
+          <div class="metric"><span class="m-lab">估时（秒）</span><span class="m-val">${p.script.estimatedSeconds || '—'}</span></div>
+          <div class="metric"><span class="m-lab">对白字数</span><span class="m-val">${p.script.voicedChars || '—'}</span></div>
+          <div class="metric"><span class="m-lab">场景数</span><span class="m-val">${p.script.scenes.length}</span></div>
+          <div class="metric"><span class="m-lab">目标</span><span class="m-val">${p.script.targetSeconds}s</span></div>
+          <div class="metric" style="margin-left:auto;justify-content:center">
+            <button class="btn btn-outline btn-sm" data-act="import-script">⇩ 导入剧本</button></div>
+        </div>
+        <div id="scriptScenes">
+          ${p.script.scenes.length ? p.script.scenes.map((s, i) => `
+            <div class="scene-block">
+              <div class="scene-head"><span class="scene-id">${esc(s.id)}</span>
+                <span class="scene-loc">${esc(s.location)} · ${esc(s.time)}</span>
+                <span class="spacer" style="flex:1"></span>
+                <button class="btn btn-xs btn-ghost" data-act="edit-scene" data-i="${i}">编辑</button>
+                <button class="btn btn-xs btn-danger" data-act="del-scene" data-i="${i}">删</button></div>
+              <div class="scene-text">${nl2br(s.content)}</div>
+            </div>`).join('') : `<div class="empty" style="padding:44px 20px"><div class="e-ico">✎</div>
+              <div class="e-title">还没有剧本场景</div><div class="e-desc">在左侧输入素材生成，或从对话中导入剧本。</div></div>`}
+        </div>
+        <button class="btn btn-ghost btn-sm" data-act="add-scene" style="margin-top:6px">＋ 手动添加场景</button>
+      </div>
+    </div>`;
+    return html;
+  }
+
+  // ============ ③ 设定中枢 ============
+  function viewSetup() {
+    const p = Store.activeProject(); if (!p) return noProject();
+    const actions = `<button class="btn btn-ghost btn-sm" data-act="add-scene-set">＋ 场景</button>
+      <button class="btn btn-ghost btn-sm" data-act="add-prop">＋ 道具</button>
+      <button class="btn btn-primary btn-sm" data-act="add-char">＋ 人物</button>`;
+    let html = headHtml('setup', actions);
+    html += `<div class="card-head" style="background:transparent;border:none;padding:0 0 12px"><h3>人物设定</h3>
+      <span class="sub">三视图保证跨镜一致性 · 已生成 ${p.setup.characters.reduce((a, c) => a + ['front','side','back'].filter(k => c.views[k]).length, 0)} 张</span></div>`;
+    if (!p.setup.characters.length) {
+      html += `<div class="empty"><div class="e-ico">◈</div><div class="e-title">还没有人物</div><div class="e-desc">添加主角与配角，建立可复用的角色设定。</div></div>`;
+    } else {
+      html += '<div class="grid g-3" style="margin-bottom:26px">';
+      p.setup.characters.forEach((c, i) => {
+        const viewKeys = [['front', '正面'], ['side', '侧面'], ['back', '背面']];
+        html += `<div class="char-card">
+          <div class="char-views">${viewKeys.map(([k, label]) => c.views[k]
+            ? `<div class="view-slot"><div class="vs-figure">${c.emoji}</div><div class="vs-label">${label}</div></div>`
+            : `<div class="view-slot empty-vs" data-act="gen-view" data-i="${i}" data-v="${k}" title="点击生成${label}"><div class="vs-figure">＋</div><div class="vs-label">${label}</div></div>`
+          ).join('')}</div>
+          <div class="char-info">
+            <div class="char-name">${esc(c.name)} <span style="font-size:10px;color:var(--txt-3);font-family:monospace">${esc(c.id)}</span></div>
+            <div class="char-role">${esc(c.role)}</div>
+            <div class="char-desc">${esc(c.desc)}</div>
+            <div class="char-tags">${c.traits.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>
+            <div class="prompt-box">${esc(c.prompt || '暂无生成提示词')}</div>
+            <div class="char-actions">
+              <button class="btn btn-xs btn-ghost" data-act="edit-char" data-i="${i}">编辑</button>
+              <button class="btn btn-xs btn-outline" data-act="regen-views" data-i="${i}">重生三视图</button>
+              <button class="btn btn-xs btn-danger" data-act="del-char" data-i="${i}">删</button>
+            </div>
+          </div></div>`;
+      });
+      html += '</div>';
+    }
+
+    html += `<div class="card-head" style="background:transparent;border:none;padding:0 0 12px"><h3>场景</h3><span class="sub">${p.setup.scenes.length} 个</span></div>`;
+    html += `<div class="grid g-3" style="margin-bottom:26px">${p.setup.scenes.map((s, i) => `
+      <div class="card card-pad"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:18px">🏞️</span><b style="flex:1">${esc(s.name)}</b>
+        <button class="btn btn-xs btn-danger" data-act="del-scene-set" data-i="${i}">删</button></div>
+        <div style="font-size:11.5px;color:var(--txt-2);line-height:1.6">${esc(s.desc)}</div>
+        <div class="prompt-box" style="margin-top:10px;margin-bottom:0">${esc(s.prompt)}</div></div>`).join('') || '<div class="mini-note">暂无场景</div>'}</div>`;
+
+    html += `<div class="card-head" style="background:transparent;border:none;padding:0 0 12px"><h3>道具</h3><span class="sub">${p.setup.props.length} 件 · 核心物证优先登记</span></div>`;
+    html += `<div class="grid g-3">${p.setup.props.map((pr, i) => `
+      <div class="card card-pad"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:18px">🎩</span><b style="flex:1">${esc(pr.name)}</b>
+        <button class="btn btn-xs btn-danger" data-act="del-prop" data-i="${i}">删</button></div>
+        <div style="font-size:11.5px;color:var(--txt-2);line-height:1.6">${esc(pr.desc)}</div></div>`).join('') || '<div class="mini-note">暂无道具</div>'}</div>`;
+    return html;
+  }
+
+  // ============ ④ 分镜台 ============
+  function viewStoryboard() {
+    const p = Store.activeProject(); if (!p) return noProject();
+    const actions = `<button class="btn btn-ghost btn-sm" data-act="import-storyboard">⇩ 导入分镜</button>
+      <button class="btn btn-outline btn-sm" data-act="gen-storyboard">✦ AI 拆镜</button>
+      <button class="btn btn-primary btn-sm" data-act="add-shot">＋ 添加镜头</button>`;
+    let html = headHtml('storyboard', actions);
+    const shots = p.storyboard.shots;
+    const sum = shots.reduce((a, s) => a + Number(s.duration || 0), 0);
+    html += `<div class="summary-bar">
+      <div class="sum-item"><span class="si-lab">镜头数</span><span class="si-val brand">${shots.length}</span></div>
+      <div class="sum-item"><span class="si-lab">逐镜加总</span><span class="si-val">${sum}s</span></div>
+      <div class="sum-item"><span class="si-lab">目标集长</span><span class="si-val">${p.storyboard.targetSeconds}s</span></div>
+      <div class="sum-item"><span class="si-lab">差值</span><span class="si-val" style="color:${Math.abs(sum - p.storyboard.targetSeconds) > 20 ? 'var(--warn)' : 'var(--ok)'}">${sum - p.storyboard.targetSeconds >= 0 ? '+' : ''}${sum - p.storyboard.targetSeconds}s</span></div>
+      <div class="sum-item"><span class="si-lab">平均镜长</span><span class="si-val">${shots.length ? (sum / shots.length).toFixed(1) : 0}s</span></div>
+      <div style="margin-left:auto;font-size:10.5px;color:var(--txt-3);max-width:230px;line-height:1.5">估时是报告不是裁决：差值交创作者定夺，不擅自改语速硬凑。</div>
+    </div>`;
+    if (!shots.length) {
+      html += `<div class="empty"><div class="e-ico">▤</div><div class="e-title">还没有分镜</div>
+        <div class="e-desc">把剧本切成逐镜画面，或从对话中导入分镜 markdown。</div></div>`;
+      return html;
+    }
+    html += '<div class="shot-layout">';
+    shots.forEach((s, i) => {
+      html += `<div class="shot-row" data-shot="${esc(s.id)}">
+        <div class="shot-no"><div class="sn-id">${esc(s.id.replace('SHOT-', ''))}</div>
+          <div class="sn-dur">${s.duration}<small>s</small></div></div>
+        <div class="shot-main">
+          <div class="shot-top"><span class="shot-title">${esc(s.name)}</span>
+            <span class="tag blue" style="font-size:9.5px">${esc(s.sceneId)}</span>
+            <span style="flex:1"></span>
+            <button class="btn btn-xs btn-ghost" data-act="edit-shot" data-i="${i}">编辑</button>
+            <button class="btn btn-xs btn-outline" data-act="shot-to-gen" data-i="${i}">✦ 生成</button>
+            <button class="btn btn-xs btn-danger" data-act="del-shot" data-i="${i}">删</button></div>
+          <div class="shot-tagline"><span class="tag">${esc(s.shotSize)}</span><span class="tag violet">${esc(s.movement)}</span><span class="tag ok">${esc(s.camera)}</span></div>
+          <div class="shot-grid">
+            <div class="shot-field"><span class="sf-k">目的</span><span class="sf-v">${esc(s.purpose)}</span></div>
+            <div class="shot-field"><span class="sf-k">声音</span><span class="sf-v">${esc(s.sound)}</span></div>
+            <div class="shot-field"><span class="sf-k">画面</span><span class="sf-v">起点：${esc(s.start)}<br>动作：${esc(s.action)}<br>终点：${esc(s.end)}</span></div>
+            <div class="shot-field"><span class="sf-k">出场设定</span><span class="sf-v"><span class="code-hint">${esc(s.assets)}</span></span></div>
+          </div>
+        </div></div>`;
+    });
+    html += '</div>';
+    return html;
+  }
+
+  // ============ ⑤ 生成工场 ============
+  function viewGenerate() {
+    const p = Store.activeProject(); if (!p) return noProject();
+    const actions = `<button class="btn btn-ghost btn-sm" data-act="sim-progress">▶ 模拟推进</button>
+      <button class="btn btn-primary btn-sm" data-act="new-gen-task">＋ 新建任务</button>`;
+    let html = headHtml('generate', actions);
+    const cols = [
+      { k: 'queued', label: '待生成', color: '#8b94a5' },
+      { k: 'running', label: '生成中', color: '#ff9d3d' },
+      { k: 'done', label: '已完成', color: '#3ecfb0' }
+    ];
+    html += `<div class="kanban">`;
+    cols.forEach(col => {
+      const tasks = p.generate.tasks.filter(t => t.status === col.k);
+      html += `<div class="kb-col"><div class="kb-head"><span class="kb-dot" style="background:${col.color}"></span>
+        <span class="kb-title">${col.label}</span><span class="kb-count">${tasks.length}</span></div>`;
+      tasks.forEach(t => {
+        const typeIco = t.type === 'video' ? '🎬' : '🖼️';
+        html += `<div class="gen-card"><div class="gen-card-top">
+          <div class="gen-thumb">${typeIco}</div>
+          <div style="flex:1;min-width:0"><div class="gen-name">${esc(t.name)}</div>
+            <div class="gen-sub">${esc(t.model)} · ${t.type === 'video' ? '视频' : '图片'} · ${esc(t.shotId.replace('SHOT-', ''))}</div></div>
+          <span class="tag ${t.status === 'done' ? 'ok' : t.status === 'running' ? 'warn' : ''}" style="font-size:9px">${t.status === 'done' ? '完成' : t.status === 'running' ? t.progress + '%' : '排队'}</span>
+        </div>
+        <div class="gen-prompt">${esc(t.prompt)}</div>
+        ${t.status === 'running' ? `<div class="gen-bar"><i style="width:${t.progress}%"></i></div>` : ''}
+        <div class="gen-actions">
+          <button class="btn btn-xs btn-outline" data-act="ai-prompt" data-id="${t.id}" title="用 AI 把画面描述改写成专业生成提示词">✦ AI 优化提示词</button>
+          ${t.status === 'queued' ? `<button class="btn btn-xs btn-primary" data-act="task-start" data-id="${t.id}">开始</button>` : ''}
+          ${t.status === 'running' ? `<button class="btn btn-xs btn-outline" data-act="task-done" data-id="${t.id}">标记完成</button>` : ''}
+          ${t.status === 'done' ? `<button class="btn btn-xs btn-ghost" data-act="task-to-asset" data-id="${t.id}">存入资产库</button>` : ''}
+          <button class="btn btn-xs btn-danger" data-act="task-del" data-id="${t.id}">删</button>
+        </div></div>`;
+      });
+      if (!tasks.length) html += `<div class="mini-note" style="text-align:center;padding:20px 0">暂无任务</div>`;
+      html += '</div>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  // ============ ⑥ 剪辑台 ============
+  function viewEdit() {
+    const p = Store.activeProject(); if (!p) return noProject();
+    const actions = `<button class="btn btn-ghost btn-sm" data-act="toggle-sub">字幕：${p.edit.subtitles ? '开' : '关'}</button>
+      <button class="btn btn-primary btn-sm" data-act="edit-to-export">去导出 ⇥</button>`;
+    let html = headHtml('edit', actions);
+    const total = p.edit.clips.reduce((a, c) => a + Number(c.duration || 0), 0);
+    html += `<div class="grid g-2" style="grid-template-columns:minmax(0,1.1fr) minmax(260px,.7fr)">
+      <div>
+        <div class="player"><div class="player-frame"><div class="pf-emoji">🎬</div></div>
+          <div class="player-overlay"><button class="play-btn" data-act="play">▶</button>
+            <span class="time-read" id="timeRead">00:00 / ${fmtSec(total)}</span></div></div>
+        <div class="timeline">
+          <div class="tl-ruler">${timelineRuler(total)}</div>
+          <div class="tl-track"><div class="tl-label"><span class="tl-ico">🎬</span>视频 V1</div>
+            <div class="tl-clips">${p.edit.clips.map((c, i) => `
+              <div class="tl-clip ${i === 0 ? 'selected' : ''}" style="background:${c.color};flex:${c.duration}" data-act="sel-clip" data-i="${i}" title="${esc(c.name)}">
+                <div style="position:absolute;left:0;top:0;bottom:0;width:5px;background:rgba(255,255,255,.3)"></div>
+                <div class="tc-name">${esc(c.name)}</div><div class="tc-dur">${c.duration}s · ${esc(c.transition)}</div>
+              </div>`).join('') || '<div class="mini-note">时间线为空</div>'}</div></div>
+          <div class="tl-track"><div class="tl-label"><span class="tl-ico">🔊</span>音频 A1</div>
+            <div class="tl-clips"><div class="tl-clip" style="background:#2d3543;flex:1"><div class="tc-name">${esc(p.edit.bgm || '暂无配乐')}</div></div></div></div>
+          <div class="tl-track"><div class="tl-label"><span class="tl-ico">💬</span>字幕</div>
+            <div class="tl-clips"><div class="tl-clip" style="background:#2d3543;flex:1"><div class="tc-name">${p.edit.subtitles ? '字幕已开启' : '字幕已关闭'}</div></div></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="card card-pad">
+          <div class="card-head" style="padding:0 0 12px"><h3>片段列表</h3><span class="sub" style="margin-left:auto">${p.edit.clips.length} 段 · ${fmtSec(total)}</span></div>
+          ${p.edit.clips.map((c, i) => `
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line-soft)">
+              <span style="width:8px;height:8px;border-radius:2px;background:${c.color};flex:none"></span>
+              <span style="flex:1;font-size:11.5px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.name)}</span>
+              <span style="font-size:10px;color:var(--txt-3)">${c.duration}s</span>
+              <button class="btn btn-xs btn-ghost" data-act="clip-up" data-i="${i}" title="上移">↑</button>
+              <button class="btn btn-xs btn-ghost" data-act="clip-down" data-i="${i}" title="下移">↓</button>
+              <button class="btn btn-xs btn-danger" data-act="clip-del" data-i="${i}">×</button>
+            </div>`).join('') || '<div class="mini-note">还没有片段。从分镜台「加入时间线」或手动添加。</div>'}
+          <button class="btn btn-ghost btn-sm" data-act="add-clip" style="margin-top:12px;width:100%">＋ 手动添加片段</button>
+        </div>
+        <div class="card card-pad" style="margin-top:14px">
+          <div class="field" style="margin-bottom:10px"><label>背景音乐</label><input class="input" id="bgmInput" value="${esc(p.edit.bgm)}"></div>
+          <button class="btn btn-ghost btn-sm" data-act="save-bgm">保存配乐</button>
+        </div>
+      </div>
+    </div>`;
+    return html;
+  }
+  function fmtSec(s) { s = Math.round(s); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; }
+  function timelineRuler(total) {
+    const step = 5, n = Math.max(4, Math.ceil(total / step));
+    return Array.from({ length: n }, (_, i) => `<div class="tl-tick" style="width:${step * 12}px">${fmtSec(i * step)}</div>`).join('');
+  }
+
+  // ============ ⑦ 导出中心 ============
+  function viewExport() {
+    const p = Store.activeProject(); if (!p) return noProject();
+    let html = headHtml('export');
+    const s = p.export.settings;
+    html += `<div class="export-layout">
+      <div class="card card-pad">
+        <div class="card-head" style="padding:0 0 14px"><h3>导出设置</h3></div>
+        <div class="field"><label>画幅比例</label><select class="select" id="exRatio">
+          ${['9:16 竖屏', '16:9 横屏', '1:1 方形'].map(x => `<option ${s.ratio === x ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+        <div class="field"><label>分辨率</label><select class="select" id="exRes">
+          ${['1080×1920', '720×1280', '1920×1080', '1280×720'].map(x => `<option ${s.resolution === x ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+        <div class="row">
+          <div class="field"><label>帧率</label><select class="select" id="exFps">
+            ${['24', '30', '60'].map(x => `<option ${s.fps === x ? 'selected' : ''}>${x} fps</option>`).join('')}</select></div>
+          <div class="field"><label>格式</label><select class="select" id="exFmt">
+            ${['MP4', 'MOV', 'WebM'].map(x => `<option ${s.format === x ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+        </div>
+        <div class="field"><label>码率</label><select class="select" id="exBitrate">
+          ${['高', '中', '低'].map(x => `<option ${s.bitrate === x ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+        <button class="btn btn-primary" data-act="do-export" style="width:100%;margin-top:6px">⇩ 生成成片</button>
+        <div class="mini-note">原型中「生成成片」会写入一条导出记录；真实文件渲染需接入视频生成与合成服务。</div>
+      </div>
+      <div>
+        <div class="card card-pad">
+          <div class="exp-preview"><span style="font-size:64px;opacity:.25">🎞️</span>
+            <span class="exp-badge tag brand">${esc(s.ratio)}</span></div>
+          <div style="font-size:12px;color:var(--txt-2);text-align:center">${esc(p.script.title)} · 预览</div>
+        </div>
+        <div class="card-head" style="background:transparent;border:none;padding:20px 0 12px"><h3>导出记录</h3><span class="sub" style="margin-left:auto">${p.export.records.length} 条</span></div>
+        ${p.export.records.map(r => `
+          <div class="exp-record"><div class="exp-rec-ico">🎬</div>
+            <div class="exp-rec-main"><div class="exp-rec-name">${esc(r.name)}</div>
+              <div class="exp-rec-meta">${esc(r.settings)} · ${r.size || '—'} · ${Store.fmtTime(r.time)}</div></div>
+            <span class="tag ok">完成</span>
+            <button class="btn btn-xs btn-danger" data-act="del-export" data-id="${r.id}">删</button></div>`).join('') || '<div class="mini-note">暂无导出记录</div>'}
+      </div>
+    </div>`;
+    return html;
+  }
+
+  // ============ ⑧ 资产库 ============
+  let assetTab = 'all';
+  function viewAssets() {
+    const p = Store.activeProject(); if (!p) return noProject();
+    let html = headHtml('assets');
+    const tabs = [['all', '全部'], ['image', '图片'], ['video', '视频'], ['audio', '音频']];
+    html += `<div class="asset-tabs">${tabs.map(([k, label]) => `<div class="asset-tab ${assetTab === k ? 'active' : ''}" data-act="asset-tab" data-tab="${k}">${label}</div>`).join('')}</div>`;
+    const list = p.assets.filter(a => assetTab === 'all' || a.type === assetTab);
+    if (!list.length) {
+      html += `<div class="empty"><div class="e-ico">▣</div><div class="e-title">这里还空着</div>
+        <div class="e-desc">在生成工场把完成的图片/视频存入资产库，它们会沉淀在这里反复复用。</div></div>`;
+      return html;
+    }
+    const typeTag = { image: ['violet', '图片'], video: ['blue', '视频'], audio: ['ok', '音频'] };
+    html += `<div class="asset-grid">`;
+    list.forEach(a => {
+      const [cls, label] = typeTag[a.type] || ['', '资产'];
+      html += `<div class="asset-card"><div class="asset-thumb">${a.emoji}
+        <span class="at-type tag ${cls}">${label}</span></div>
+        <div class="asset-meta"><div class="asset-name">${esc(a.name)}</div>
+          <div class="asset-sub">来自 ${esc(a.from)}</div></div></div>`;
+    });
+    html += '</div>';
+    return html;
+  }
+
+  // ============ 视图事件绑定（统一委托） ============
+  function bindViewEvents() {
+    $('#workspace').onclick = handleClick;
+    $('#workspace').onchange = handleChange;
+  }
+
+  function handleChange(e) {
+    const p = Store.activeProject(); if (!p) return;
+    // 导出设置即时保存
+    const map = { exRatio: 'ratio', exRes: 'resolution', exFps: 'fps', exFmt: 'format', exBitrate: 'bitrate' };
+    if (map[e.target.id]) {
+      p.export.settings[map[e.target.id]] = e.target.value.replace(' fps', '');
+      scheduleSave();
+    }
+  }
+
+  function handleClick(e) {
+    const el = e.target.closest('[data-act]');
+    if (!el) return;
+    const act = el.dataset.act;
+    const p = Store.activeProject();
+    const i = el.dataset.i != null ? +el.dataset.i : null;
+
+    // 全局类
+    if (act === 'goto-view') { const v = el.dataset.view; if (v) { currentView = v; render(); } return; }
+    if (act === 'goto-projects') { currentView = 'projects'; render(); return; }
+    if (act === 'new-project') { return modalNewProject(); }
+    if (act === 'edit-project') { return modalEditProject(el.dataset.id); }
+    if (act === 'del-project') { return modalDelProject(el.dataset.id); }
+    if (act === 'switch-project' || act === 'open-project') {
+      Store.setActive(el.dataset.id); currentView = 'projects'; render(); toast('已切换项目', 'ok'); return;
+    }
+    if (act === 'proj-goto') {
+      const pid = el.dataset.id, v = el.dataset.view;
+      if (pid) Store.setActive(pid);
+      if (v && VIEW_TITLE[v]) currentView = v;
+      render(); return;
+    }
+
+    if (!p) return;
+
+    // 剧本工坊
+    if (act === 'save-source') { p.script.source = $('#sourceInput').value; p.type = $('#sourceType').value; p.updatedAt = Store.now(); scheduleSave(); toast('素材已保存', 'ok'); return; }
+    if (act === 'gen-script') {
+      const src = $('#sourceInput').value.trim();
+      if (!src) { toast('请先粘贴素材文字', 'err'); return; }
+      p.script.source = src; p.type = $('#sourceType').value; scheduleSave();
+      return aiGenerate('script', p, src);
+    }
+    if (act === 'bridge-import') { return modalBridge(p); }
+    if (act === 'save-script-meta') { p.script.title = $('#scriptTitle').value; p.script.targetSeconds = +$('#targetSec').value || 90; p.storyboard.targetSeconds = p.script.targetSeconds; scheduleSave(); toast('参数已保存', 'ok'); return; }
+    if (act === 'import-script') { return modalImport('剧本', txt => importScript(p, txt)); }
+    if (act === 'add-scene') { return modalScene(p, null, i); }
+    if (act === 'edit-scene') { return modalScene(p, i, i); }
+    if (act === 'del-scene') { p.script.scenes.splice(i, 1); scheduleSave(); render(); return; }
+
+    // 设定中枢
+    if (act === 'add-char') { return modalChar(p, null); }
+    if (act === 'edit-char') { return modalChar(p, i); }
+    if (act === 'del-char') { p.setup.characters.splice(i, 1); scheduleSave(); render(); return; }
+    if (act === 'regen-views' || act === 'gen-view') {
+      const c = p.setup.characters[i];
+      if (act === 'regen-views') c.views = { front: true, side: true, back: true };
+      else c.views[el.dataset.v] = true;
+      scheduleSave(); render(); toast('三视图已更新（原型：占位展示）', 'ok'); return;
+    }
+    if (act === 'add-scene-set') { return modalSceneSet(p); }
+    if (act === 'del-scene-set') { p.setup.scenes.splice(i, 1); scheduleSave(); render(); return; }
+    if (act === 'add-prop') { return modalProp(p); }
+    if (act === 'del-prop') { p.setup.props.splice(i, 1); scheduleSave(); render(); return; }
+
+    // 分镜台
+    if (act === 'add-shot') { return modalShot(p, null); }
+    if (act === 'edit-shot') { return modalShot(p, i); }
+    if (act === 'del-shot') { p.storyboard.shots.splice(i, 1); scheduleSave(); render(); return; }
+    if (act === 'import-storyboard') { return modalImport('分镜', txt => importStoryboard(p, txt)); }
+    if (act === 'gen-storyboard') {
+      if (!p.script.scenes.length) { toast('请先在剧本工坊生成或导入剧本', 'err'); return; }
+      return aiGenerate('storyboard', p);
+    }
+    if (act === 'shot-to-gen') {
+      const s = p.storyboard.shots[i];
+      p.generate.tasks.unshift({ id: Store.uid('gen'), shotId: s.id, name: s.name, type: 'video', model: 'Seedance', status: 'queued', progress: 0, prompt: s.action, createdAt: Store.now() });
+      scheduleSave(); toast('已加入生成工场队列（提示词可点「AI 优化」重写）', 'ok'); render(); return;
+    }
+    if (act === 'ai-prompt') {
+      const t = p.generate.tasks.find(x => x.id === el.dataset.id);
+      if (!t) return;
+      return aiOptimizePrompt(p, t);
+    }
+
+    // 生成工场
+    if (act === 'task-start') { const t = p.generate.tasks.find(x => x.id === el.dataset.id); t.status = 'running'; t.progress = 5; scheduleSave(); render(); return; }
+    if (act === 'task-done') { const t = p.generate.tasks.find(x => x.id === el.dataset.id); t.status = 'done'; t.progress = 100; scheduleSave(); render(); toast('生成完成', 'ok'); return; }
+    if (act === 'task-del') { p.generate.tasks = p.generate.tasks.filter(x => x.id !== el.dataset.id); scheduleSave(); render(); return; }
+    if (act === 'task-to-asset') {
+      const t = p.generate.tasks.find(x => x.id === el.dataset.id);
+      p.assets.unshift({ id: Store.uid('as'), type: t.type, name: t.name, emoji: t.type === 'video' ? '🎬' : '🖼️', from: t.shotId.replace('SHOT-', 'SHOT'), time: Store.now() });
+      scheduleSave(); toast('已存入资产库', 'ok'); render(); return;
+    }
+    if (act === 'sim-progress') {
+      let changed = false;
+      p.generate.tasks.forEach(t => { if (t.status === 'running') { t.progress = Math.min(100, t.progress + 20); if (t.progress >= 100) t.status = 'done'; changed = true; } });
+      if (!changed) toast('没有正在生成中的任务', 'warn'); else { toast('已推进一轮进度', 'ok'); }
+      scheduleSave(); render(); return;
+    }
+    if (act === 'new-gen-task') { return modalGenTask(p); }
+
+    // 剪辑台
+    if (act === 'play') { playPlayer(); return; }
+    if (act === 'sel-clip') { $$('.tl-clip.selected').forEach(x => x.classList.remove('selected')); el.classList.add('selected'); return; }
+    if (act === 'clip-up') { if (i > 0) { [p.edit.clips[i - 1], p.edit.clips[i]] = [p.edit.clips[i], p.edit.clips[i - 1]]; scheduleSave(); render(); } return; }
+    if (act === 'clip-down') { if (i < p.edit.clips.length - 1) { [p.edit.clips[i + 1], p.edit.clips[i]] = [p.edit.clips[i], p.edit.clips[i + 1]]; scheduleSave(); render(); } return; }
+    if (act === 'clip-del') { p.edit.clips.splice(i, 1); scheduleSave(); render(); return; }
+    if (act === 'add-clip') { return modalClip(p); }
+    if (act === 'toggle-sub') { p.edit.subtitles = !p.edit.subtitles; scheduleSave(); render(); return; }
+    if (act === 'save-bgm') { p.edit.bgm = $('#bgmInput').value; scheduleSave(); toast('配乐已保存', 'ok'); return; }
+    if (act === 'edit-to-export') { currentView = 'export'; render(); return; }
+
+    // 导出中心
+    if (act === 'do-export') {
+      const s = p.export.settings;
+      p.export.records.unshift({ id: Store.uid('exp'), name: `${p.script.title || 'EP001'}_v${p.export.records.length + 1}`, time: Store.now(), settings: `${s.resolution} · ${s.fps}fps · ${s.format}`, status: 'done', size: (Math.random() * 200 + 50).toFixed(0) + ' MB' });
+      scheduleSave(); render(); toast('已生成导出记录（原型）', 'ok'); return;
+    }
+    if (act === 'del-export') { p.export.records = p.export.records.filter(x => x.id !== el.dataset.id); scheduleSave(); render(); return; }
+
+    // 资产库
+    if (act === 'asset-tab') { assetTab = el.dataset.tab; render(); return; }
+  }
+
+  // ============ 播放器模拟 ============
+  let playTimer = null;
+  function playPlayer() {
+    const read = $('#timeRead'); if (!read) return;
+    const p = Store.activeProject();
+    const total = p.edit.clips.reduce((a, c) => a + Number(c.duration || 0), 0);
+    let t = 0;
+    clearInterval(playTimer);
+    playTimer = setInterval(() => {
+      t += 1;
+      if (read) read.textContent = `${fmtSec(Math.min(t, total))} / ${fmtSec(total)}`;
+      if (t >= total) { clearInterval(playTimer); toast('播放结束', 'ok'); }
+    }, 1000);
+    toast('播放中（原型：时间轴模拟）', 'ok');
+  }
+
+  // ============ 弹窗 ============
+  function openModal(title, bodyHtml, footHtml, wide) {
+    $('#modalTitle').textContent = title;
+    $('#modalBody').innerHTML = bodyHtml;
+    $('#modalFoot').innerHTML = footHtml || `<button class="btn btn-ghost" data-mact="cancel">取消</button><button class="btn btn-primary" data-mact="confirm">保存</button>`;
+    $('#modal').classList.toggle('wide', !!wide);
+    const bd = $('#modalBackdrop');
+    bd.hidden = false;
+    bd.style.display = 'grid';   // 显式覆盖，避免 hidden 被 CSS display 规则盖掉
+    $('#modalFoot').onclick = e => {
+      const b = e.target.closest('[data-mact]'); if (!b) return;
+      if (b.dataset.mact === 'cancel') closeModal();
+      if (b.dataset.mact === 'confirm') { if (modalConfirm) modalConfirm(); }
+    };
+  }
+  function closeModal() { const bd = $('#modalBackdrop'); bd.hidden = true; bd.style.display = 'none'; modalConfirm = null; }
+  let modalConfirm = null;
+
+  function modalNewProject() {
+    openModal('新建项目', `
+      <div class="field"><label>项目名称</label><input class="input" id="mName" placeholder="例如：暴富·山城故事 第二季"></div>
+      <div class="field"><label>素材类型</label><select class="select" id="mType">
+        <option value="novel">小说改编</option><option value="news">新闻热点</option><option value="idea">一句话创意</option></select></div>
+      <div class="mini-note">新项目会自动生成一条空白的七段流水线：剧本 → 设定 → 分镜 → 生成 → 剪辑 → 导出 → 资产。</div>`);
+    modalConfirm = () => {
+      const name = $('#mName').value.trim();
+      if (!name) { toast('请填写项目名称', 'err'); return; }
+      Store.addProject(name, $('#mType').value);
+      closeModal(); refresh(); render(); toast('项目已创建', 'ok');
+    };
+  }
+
+  const PROJECT_EMOJIS = ['📖','📰','💡','🏗️','🎬','🦍','🎭','📺','🎨','🧩','🎯','🚀'];
+  function modalEditProject(id) {
+    const target = db.projects.find(x => x.id === id);
+    if (!target) return;
+    const emojiRow = PROJECT_EMOJIS.map(e =>
+      `<button type="button" class="emoji-opt ${e === target.emoji ? 'sel' : ''}" data-act="pick-emoji" data-emoji="${e}" title="${e}">${e}</button>`).join('');
+    openModal('编辑项目', `
+      <div class="field"><label>项目名称</label><input class="input" id="mName" value="${esc(target.name)}"></div>
+      <div class="field"><label>素材类型</label><select class="select" id="mType">
+        <option value="novel" ${target.type === 'novel' ? 'selected' : ''}>小说改编</option>
+        <option value="news" ${target.type === 'news' ? 'selected' : ''}>新闻热点</option>
+        <option value="idea" ${target.type === 'idea' ? 'selected' : ''}>一句话创意</option></select></div>
+      <div class="field"><label>项目图标</label>
+        <input type="hidden" id="mEmoji" value="${esc(target.emoji || '📖')}">
+        <div class="emoji-grid" id="emojiGrid">${emojiRow}</div></div>`);
+    // 图标点选（就地切换选中态，不关闭弹窗）
+    $('#emojiGrid').onclick = ev => {
+      const b = ev.target.closest('[data-act="pick-emoji"]'); if (!b) return;
+      $$('.emoji-opt', $('#emojiGrid')).forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+      $('#mEmoji').value = b.dataset.emoji;
+    };
+    modalConfirm = () => {
+      const name = $('#mName').value.trim();
+      if (!name) { toast('项目名称不能为空', 'err'); return; }
+      Store.updateProject(id, { name, type: $('#mType').value, emoji: $('#mEmoji').value });
+      closeModal(); refresh(); render(); toast('项目已更新', 'ok');
+    };
+  }
+
+  function modalDelProject(id) {
+    const target = db.projects.find(x => x.id === id);
+    if (!target) return;
+    const isActive = Store.activeProject() && Store.activeProject().id === id;
+    const cnt = db.projects.length;
+    openModal('删除项目', `
+      <div class="danger-box">
+        <div class="danger-title">⚠️ 确认删除「${esc(target.name)}」？</div>
+        <div class="danger-desc">该项目的剧本、设定、分镜、生成任务与资产将一并删除，且无法撤销。</div>
+        ${cnt === 1 ? '<div class="danger-warn">这是最后一个项目，删除后项目台将为空。</div>' : ''}
+        ${isActive && cnt > 1 ? '<div class="danger-warn">这是当前正在使用的项目，删除后将自动切到另一个项目。</div>' : ''}
+      </div>`, `<button class="btn btn-ghost" data-mact="cancel">取消</button><button class="btn btn-danger" data-mact="confirm">确认删除</button>`);
+    modalConfirm = () => {
+      Store.deleteProject(id);
+      closeModal(); refresh(); render(); toast('项目已删除', 'ok');
+    };
+  }
+
+  function modalScene(p, idx) {
+    const s = idx != null ? p.script.scenes[idx] : { id: 'EP001-SC' + String(p.script.scenes.length + 1).padStart(3, '0'), location: '', time: '', content: '' };
+    openModal(idx != null ? '编辑场景' : '添加场景', `
+      <div class="row"><div class="field"><label>场景编号</label><input class="input" id="mSid" value="${esc(s.id)}"></div>
+        <div class="field"><label>地点</label><input class="input" id="mSloc" value="${esc(s.location)}"></div></div>
+      <div class="field"><label>时间</label><input class="input" id="mStime" value="${esc(s.time)}"></div>
+      <div class="field"><label>场景内容</label><textarea class="textarea" id="mScontent" style="min-height:150px">${esc(s.content)}</textarea></div>`);
+    modalConfirm = () => {
+      const obj = { id: $('#mSid').value.trim(), location: $('#mSloc').value.trim(), time: $('#mStime').value.trim(), content: $('#mScontent').value };
+      if (idx != null) p.script.scenes[idx] = obj; else p.script.scenes.push(obj);
+      p.updatedAt = Store.now(); scheduleSave(); closeModal(); render(); toast('场景已保存', 'ok');
+    };
+  }
+
+  function modalImport(kind, cb) {
+    openModal('导入' + kind + '（Markdown）', `
+      <div class="field"><label>粘贴 ${kind} markdown 文本</label>
+        <textarea class="textarea" id="mImport" style="min-height:240px;font-family:monospace;font-size:11px" placeholder="粘贴从导演对话中生成的剧本 / 分镜 markdown……"></textarea></div>
+      <div class="mini-note">这是一个轻量导入：剧本文本按场景标题切分，分镜按「- 时长：Ns」与标题解析。完整结构化解析建议直接在对话中完成。</div>`);
+    modalConfirm = () => { const txt = $('#mImport').value; if (!txt.trim()) { toast('内容为空', 'err'); return; } cb(txt); closeModal(); scheduleSave(); render(); toast('导入完成', 'ok'); };
+  }
+
+  function importScript(p, txt) {
+    const parts = txt.split(/^##\s+/m).filter(Boolean);
+    const scenes = [];
+    parts.forEach(part => {
+      const lines = part.split('\n');
+      const title = lines[0].trim();
+      const m = title.match(/(EP\d+-SC\d+)/);
+      scenes.push({ id: m ? m[1] : 'SC' + String(scenes.length + 1).padStart(3, '0'), location: title.replace(/^EP\d+-SC\d+\s*/, '').slice(0, 20) || '场景', time: '', content: lines.slice(1).join('\n').trim() });
+    });
+    if (scenes.length) p.script.scenes = scenes;
+  }
+
+  function importStoryboard(p, txt) {
+    const blocks = txt.split(/^##\s+SHOT-/m).slice(1);
+    const shots = [];
+    blocks.forEach((b, idx) => {
+      const title = ('SHOT-' + b.split('\n')[0].trim()) || ('SHOT-' + (idx + 1));
+      const get = k => { const m = b.match(new RegExp('- ' + k + '：([^\\n]+)')); return m ? m[1].trim() : ''; };
+      const dur = parseInt((b.match(/- 时长：(\d+)s/) || [])[1] || '3', 10);
+      shots.push({ id: title.replace(/[^\w-]/g, ''), name: title.split('·').pop().trim(), sceneId: (get('来源').match(/EP\d+-SC\d+/) || ['EP001-SC001'])[0], duration: dur,
+        purpose: get('目的'), shotSize: get('景别/机位') || '中景', camera: get('景别/机位') || '', movement: get('运镜') || '固定',
+        start: get('起点'), action: get('动作'), end: get('终点'), assets: get('出场设定'), sound: get('声音') });
+    });
+    if (shots.length) p.storyboard.shots = shots;
+  }
+
+  // ============ 真 AI 生成 ============
+  function aiBusy(msg) {
+    openModal('AI 正在创作', `
+      <div class="ai-progress">
+        <div class="ai-spinner"></div>
+        <div class="ai-progress-title">${esc(msg)}</div>
+        <div class="ai-progress-note">正在调用云端大模型，实时流式生成。首次可能需几秒，请勿关闭。</div>
+        <pre class="ai-stream" id="aiStream"></pre>
+      </div>`, `<button class="btn btn-ghost" data-mact="cancel">取消</button>`, false);
+  }
+
+  async function aiGenerate(kind, p, src) {
+    if (!CloudAI.available && !CloudAI.init()) {
+      toast('AI 服务未就绪：请检查网络后刷新', 'err'); return;
+    }
+    aiBusy(kind === 'script' ? '正在改编剧本…' : '正在拆分镜…');
+    const streamEl = () => $('#aiStream');
+    try {
+      let text = '';
+      if (kind === 'script') {
+        text = await CloudAI.generateScript(src, p.type, p.script.targetSeconds, partial => {
+          const el = streamEl(); if (el) { el.textContent = partial.slice(-600); el.scrollTop = el.scrollHeight; }
+        });
+        const scenes = Bridge.parseBundle([{ name: '剧本.md', content: text }]).scriptScenes;
+        if (!scenes || !scenes.length) throw new Error('AI 返回内容未能解析为剧本场景');
+        p.script.scenes = scenes;
+        p.script.title = p.script.title && p.script.title !== '未命名' ? p.script.title : 'AI 生成剧本';
+      } else {
+        const scriptText = p.script.scenes.map(s => `## ${s.id} ${s.location}\n${s.content}`).join('\n\n');
+        text = await CloudAI.generateStoryboard(scriptText, p.storyboard.targetSeconds, partial => {
+          const el = streamEl(); if (el) { el.textContent = partial.slice(-600); el.scrollTop = el.scrollHeight; }
+        });
+        const parsed = Bridge.parseBundle([{ name: '分镜.md', content: text }]).storyboard;
+        if (!parsed || !parsed.shots.length) throw new Error('AI 返回内容未能解析为分镜');
+        p.storyboard.shots = parsed.shots;
+        p.storyboard.fullTotal = parsed.fullTotal;
+        p.storyboard.fullCount = parsed.fullCount;
+      }
+      p.updatedAt = Store.now(); scheduleSave(); closeModal(); render();
+      toast(kind === 'script' ? `已生成 ${p.script.scenes.length} 场剧本` : `已生成 ${p.storyboard.shots.length} 个镜头`, 'ok');
+    } catch (e) {
+      closeModal();
+      const code = e && e.error && e.error.code;
+      let msg = e && e.message ? e.message : '生成失败';
+      if (code === 'quota_exhausted' || String(code).startsWith('quota')) msg = 'AI 额度已用完，请稍后再试或联系管理员';
+      else if (String(code).startsWith('auth')) msg = 'AI 身份校验失败，请刷新页面重试';
+      else if (String(code).startsWith('gateway') || String(code).startsWith('model')) msg = 'AI 服务暂时不可用，请重试';
+      toast('生成失败：' + msg, 'err');
+    }
+  }
+
+  async function aiOptimizePrompt(p, task) {
+    if (!CloudAI.available && !CloudAI.init()) { toast('AI 服务未就绪', 'err'); return; }
+    const shot = p.storyboard.shots.find(s => s.id === task.shotId) || { name: task.name, action: task.prompt };
+    toast('AI 正在改写提示词…', 'ok');
+    try {
+      const prompt = await CloudAI.generatePrompt(shot, p.setup.characters);
+      if (!prompt.trim()) throw new Error('返回为空');
+      task.prompt = prompt.trim().replace(/^["「]|["」]$/g, '');
+      scheduleSave(); render();
+      toast('提示词已由 AI 优化', 'ok');
+    } catch (e) {
+      toast('AI 优化失败：' + (e && e.message ? e.message : '未知错误'), 'err');
+    }
+  }
+
+  // ============ 一键导入桥弹窗 ============
+  function modalBridge(p) {
+    openModal('一键导入 · 导演技能产物', `
+      <div class="bridge-drop" id="bridgeDrop">
+        <div class="bd-ico">📥</div>
+        <div class="bd-title">选择或拖入技能产出的文件</div>
+        <div class="bd-desc">可多选：剧本.md · 分镜.md · 设定清单.md · 素材事实表.md · 本集配置.json</div>
+        <input type="file" id="bridgeFiles" multiple accept=".md,.json,.txt" hidden>
+        <button class="btn btn-outline btn-sm" id="bridgePick" type="button">选择文件</button>
+      </div>
+      <div class="field" style="margin-top:14px"><label>没有文件？直接粘贴多个文件内容（用文件名分隔）</label>
+        <textarea class="textarea" id="bridgePaste" style="min-height:150px;font-family:monospace;font-size:11px" placeholder="==== 剧本.md ====\n# EP001 …\n\n==== 分镜.md ====\n## SHOT-EP001-001 …"></textarea></div>
+      <div class="mini-note">解析器按内容特征自动识别文件类型，与文件名无关。已存在的数据会被对应产物覆盖。</div>
+    `, `<button class="btn btn-ghost" data-mact="cancel">取消</button><button class="btn btn-primary" id="bridgeDo" data-mact="confirm">解析并导入</button>`, true);
+
+    const pick = $('#bridgeFiles');
+    $('#bridgePick').onclick = () => pick.click();
+    const drop = $('#bridgeDrop');
+    ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
+    ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); }));
+    drop.addEventListener('drop', e => { readFiles(e.dataTransfer.files); });
+    pick.addEventListener('change', e => { readFiles(e.target.files); });
+
+    const fileContents = [];
+    function readFiles(fileList) {
+      [...fileList].forEach(f => {
+        const r = new FileReader();
+        r.onload = () => {
+          fileContents.push({ name: f.name, content: r.result });
+          const bd = $('.bd-desc'); if (bd) bd.textContent = `已就绪 ${fileContents.length} 个文件：` + fileContents.map(x => x.name).join('、');
+        };
+        r.readAsText(f);
+      });
+    }
+
+    // 覆盖 confirm 行为
+    modalConfirm = null;
+    $('#modalFoot').onclick = e => {
+      const b = e.target.closest('[data-mact]'); if (!b) return;
+      if (b.dataset.mact === 'cancel') { closeModal(); return; }
+      if (b.id !== 'bridgeDo') return;
+      let files = [...fileContents];
+      const pasted = ($('#bridgePaste') || {}).value || '';
+      if (pasted.trim()) {
+        pasted.split(/^====\s*([^\n]+?)\s*====$/m).forEach((seg, i, arr) => {
+          if (i % 2 === 1) files.push({ name: arr[i], content: arr[i + 1] || '' });
+        });
+        if (!files.length) files.push({ name: '粘贴内容.md', content: pasted });
+      }
+      if (!files.length) { toast('请先选择文件或粘贴内容', 'err'); return; }
+      const parsed = Bridge.parseBundle(files);
+      if (!parsed.ok) { toast('未能识别出可导入的内容，请检查文件内容', 'err'); return; }
+      const changes = Bridge.applyToProject(p, parsed);
+      scheduleSave(); closeModal(); render();
+      toast('导入完成：' + changes.join('、'), 'ok');
+    };
+  }
+
+  function modalChar(p, idx) {
+    const c = idx != null ? p.setup.characters[idx] : { name: '', role: '', desc: '', emoji: '👤', traits: [], prompt: '' };
+    openModal(idx != null ? '编辑人物' : '新增人物', `
+      <div class="row"><div class="field"><label>姓名</label><input class="input" id="mCname" value="${esc(c.name)}"></div>
+        <div class="field"><label>标识 emoji</label><input class="input" id="mCemoji" value="${esc(c.emoji)}" maxlength="4"></div></div>
+      <div class="field"><label>角色定位</label><input class="input" id="mCrole" value="${esc(c.role)}" placeholder="例如：男主 · 装修木工"></div>
+      <div class="field"><label>外貌与性格</label><textarea class="textarea" id="mCdesc" style="min-height:80px">${esc(c.desc)}</textarea></div>
+      <div class="field"><label>可辨识特征（逗号分隔）</label><input class="input" id="mCtraits" value="${esc(c.traits.join('，'))}"></div>
+      <div class="field"><label>生成提示词</label><textarea class="textarea" id="mCprompt" style="min-height:70px">${esc(c.prompt)}</textarea></div>`, '', true);
+    modalConfirm = () => {
+      const name = $('#mCname').value.trim(); if (!name) { toast('请填写姓名', 'err'); return; }
+      const obj = { id: c.id || Store.uid('CHAR'), name, role: $('#mCrole').value.trim(), desc: $('#mCdesc').value, emoji: $('#mCemoji').value.trim() || '👤',
+        traits: $('#mCtraits').value.split(/[,，]/).map(x => x.trim()).filter(Boolean), prompt: $('#mCprompt').value, views: c.views || { front: false, side: false, back: false } };
+      if (idx != null) p.setup.characters[idx] = obj; else p.setup.characters.push(obj);
+      scheduleSave(); closeModal(); render(); toast('人物已保存', 'ok');
+    };
+  }
+
+  function modalSceneSet(p) {
+    openModal('新增场景', `
+      <div class="field"><label>场景名称</label><input class="input" id="mSNname" placeholder="例如：工地板房"></div>
+      <div class="field"><label>描述</label><textarea class="textarea" id="mSNdesc"></textarea></div>
+      <div class="field"><label>生成提示词</label><input class="input" id="mSNprompt"></div>`);
+    modalConfirm = () => { const name = $('#mSNname').value.trim(); if (!name) { toast('请填写名称', 'err'); return; }
+      p.setup.scenes.push({ id: Store.uid('LOC'), name, desc: $('#mSNdesc').value, prompt: $('#mSNprompt').value });
+      scheduleSave(); closeModal(); render(); toast('场景已添加', 'ok'); };
+  }
+
+  function modalProp(p) {
+    openModal('新增道具', `
+      <div class="field"><label>道具名称</label><input class="input" id="mPname"></div>
+      <div class="field"><label>说明</label><textarea class="textarea" id="mPdesc"></textarea></div>`);
+    modalConfirm = () => { const name = $('#mPname').value.trim(); if (!name) { toast('请填写名称', 'err'); return; }
+      p.setup.props.push({ id: Store.uid('PROP'), name, desc: $('#mPdesc').value });
+      scheduleSave(); closeModal(); render(); toast('道具已添加', 'ok'); };
+  }
+
+  function modalShot(p, idx) {
+    const s = idx != null ? p.storyboard.shots[idx] : { id: 'SHOT-EP001-' + String(p.storyboard.shots.length + 1).padStart(3, '0'), name: '', sceneId: 'EP001-SC001', duration: 3, purpose: '', shotSize: '中景', camera: '', movement: '固定', start: '', action: '', end: '', assets: '', sound: '' };
+    openModal(idx != null ? '编辑镜头' : '新增镜头', `
+      <div class="row"><div class="field"><label>镜号</label><input class="input" id="mHid" value="${esc(s.id)}"></div>
+        <div class="field"><label>时长（秒）</label><input class="input" type="number" id="mHdur" value="${s.duration}"></div></div>
+      <div class="field"><label>镜名</label><input class="input" id="mHname" value="${esc(s.name)}"></div>
+      <div class="row"><div class="field"><label>来源场景</label><input class="input" id="mHscene" value="${esc(s.sceneId)}"></div>
+        <div class="field"><label>景别/机位</label><input class="input" id="mHsize" value="${esc(s.shotSize)}"></div></div>
+      <div class="row"><div class="field"><label>运镜</label><input class="input" id="mHmove" value="${esc(s.movement)}"></div>
+        <div class="field"><label>出场设定ID</label><input class="input" id="mHassets" value="${esc(s.assets)}"></div></div>
+      <div class="field"><label>目的</label><input class="input" id="mHpurpose" value="${esc(s.purpose)}"></div>
+      <div class="field"><label>起点 → 动作 → 终点</label>
+        <input class="input" id="mHstart" value="${esc(s.start)}" placeholder="起点" style="margin-bottom:6px">
+        <input class="input" id="mHaction" value="${esc(s.action)}" placeholder="动作" style="margin-bottom:6px">
+        <input class="input" id="mHend" value="${esc(s.end)}" placeholder="终点"></div>
+      <div class="field"><label>声音</label><input class="input" id="mHsound" value="${esc(s.sound)}"></div>`, '', true);
+    modalConfirm = () => {
+      const obj = { id: $('#mHid').value.trim() || Store.uid('SHOT'), name: $('#mHname').value.trim() || '未命名镜头', sceneId: $('#mHscene').value.trim(),
+        duration: +$('#mHdur').value || 3, purpose: $('#mHpurpose').value, shotSize: $('#mHsize').value, camera: $('#mHsize').value, movement: $('#mHmove').value,
+        start: $('#mHstart').value, action: $('#mHaction').value, end: $('#mHend').value, assets: $('#mHassets').value, sound: $('#mHsound').value };
+      if (idx != null) p.storyboard.shots[idx] = obj; else p.storyboard.shots.push(obj);
+      scheduleSave(); closeModal(); render(); toast('镜头已保存', 'ok');
+    };
+  }
+
+  function modalGenTask(p) {
+    openModal('新建生成任务', `
+      <div class="field"><label>关联镜头</label><select class="select" id="mGshot">
+        ${p.storyboard.shots.map(s => `<option value="${esc(s.id)}">${esc(s.id.replace('SHOT-', ''))} · ${esc(s.name)}</option>`).join('') || '<option value="">（暂无镜头，可手动命名）</option>'}</select></div>
+      <div class="field"><label>任务名称</label><input class="input" id="mGname" placeholder="留空则取镜头名"></div>
+      <div class="row"><div class="field"><label>类型</label><select class="select" id="mGtype"><option value="video">视频</option><option value="image">图片</option></select></div>
+        <div class="field"><label>模型</label><select class="select" id="mGmodel"><option>Seedance</option><option>即梦</option><option>LibTV</option></select></div></div>
+      <div class="field"><label>提示词</label><textarea class="textarea" id="mGprompt" style="min-height:90px"></textarea></div>`);
+    modalConfirm = () => {
+      const shotId = $('#mGshot').value || 'SHOT-MANUAL';
+      const name = $('#mGname').value.trim() || (p.storyboard.shots.find(s => s.id === shotId)?.name || '新任务');
+      p.generate.tasks.unshift({ id: Store.uid('gen'), shotId, name, type: $('#mGtype').value, model: $('#mGmodel').value, status: 'queued', progress: 0, prompt: $('#mGprompt').value, createdAt: Store.now() });
+      scheduleSave(); closeModal(); render(); toast('任务已加入队列', 'ok');
+    };
+  }
+
+  function modalClip(p) {
+    openModal('添加剪辑片段', `
+      <div class="row"><div class="field"><label>片段名称</label><input class="input" id="mCpname"></div>
+        <div class="field"><label>时长（秒）</label><input class="input" type="number" id="mCpdur" value="3"></div></div>
+      <div class="row"><div class="field"><label>转场</label><select class="select" id="mCptr"><option>硬切</option><option>叠化</option><option>推近</option><option>淡入</option></select></div>
+        <div class="field"><label>轨道</label><select class="select" id="mCptrack"><option>V1</option><option>V2</option></select></div></div>`);
+    modalConfirm = () => {
+      const name = $('#mCpname').value.trim(); if (!name) { toast('请填写名称', 'err'); return; }
+      const colors = ['#ff6b35', '#ff9d3d', '#9b7bff', '#5aa9ff', '#3ecfb0', '#ffc94d'];
+      p.edit.clips.push({ id: Store.uid('clip'), shotId: '', name, duration: +$('#mCpdur').value || 3, color: colors[p.edit.clips.length % colors.length], track: $('#mCptrack').value, transition: $('#mCptr').value });
+      scheduleSave(); closeModal(); render(); toast('片段已添加', 'ok');
+    };
+  }
+
+  function confirmReset() {
+    openModal('🦍 猩猩导演台',
+      `<div style="text-align:center;padding:8px 0 4px">
+        <div style="font-size:15px;line-height:1.8;color:var(--txt-1)">一站式短剧创作工作台<br>文字 → 剧本 → 设定 → 分镜 → 生成 → 剪辑 → 导出</div>
+        <div class="divider"></div>
+        <div style="text-align:left;font-size:11.5px;color:var(--txt-2);line-height:1.8">
+          · 数据存在本机浏览器，自动保存<br>
+          · 顶栏「备份 / 恢复」可导出或导入 JSON<br>
+          · 原型中生成、渲染为模拟，实际创作在对话中完成<br>
+          · 点击品牌可随时打开本说明
+        </div></div>`,
+      `<button class="btn btn-ghost" data-mact="cancel">关闭</button>
+       <button class="btn btn-danger" data-mact="reset">重置为示例数据</button>`);
+    $('#modalFoot').onclick = e => {
+      const b = e.target.closest('[data-mact]'); if (!b) return;
+      if (b.dataset.mact === 'cancel') closeModal();
+      if (b.dataset.mact === 'reset') {
+        if (confirm('确定重置？当前所有项目将被示例数据覆盖。建议先备份。')) {
+          Store.resetToSeed(); closeModal(); refresh(); render(); toast('已重置为示例数据', 'ok');
+        }
+      }
+    };
+  }
+
+  // ============ Toast ============
+  function toast(msg, type = 'ok') {
+    const wrap = $('#toastWrap');
+    const t = document.createElement('div');
+    t.className = 'toast' + (type === 'ok' ? '' : ' ' + type);
+    const ico = type === 'err' ? '⛔' : type === 'warn' ? '⚠️' : '✓';
+    t.innerHTML = `<span class="t-ico">${ico}</span><span>${esc(msg)}</span>`;
+    wrap.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(20px)'; t.style.transition = '.3s'; }, 3200);
+    setTimeout(() => t.remove(), 3600);
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
+
+</script>
+</body>
+</html>
