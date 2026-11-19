@@ -260,7 +260,11 @@ button{cursor:pointer}
 /* 统计条 */
 .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
 @media(max-width:760px){.stat-row{grid-template-columns:repeat(2,1fr)}}
-.stat-box{background:var(--bg-3);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.stat-box{background:var(--bg-3);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;position:relative;transition:.15s}
+.stat-box[data-act]{cursor:pointer}
+.stat-box[data-act]:hover{border-color:var(--brand);background:var(--bg-4);transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.stat-go{position:absolute;right:12px;bottom:12px;font-size:10px;color:var(--brand-2);opacity:0;transition:.15s}
+.stat-box[data-act]:hover .stat-go{opacity:1}
 .stat-label{font-size:11px;color:var(--txt-2);margin-bottom:8px;display:flex;align-items:center;gap:7px}
 .stat-val{font-size:26px;font-weight:800;line-height:1}
 .stat-val small{font-size:12px;color:var(--txt-3);font-weight:500;margin-left:4px}
@@ -1215,6 +1219,17 @@ const Bridge = (() => {
 
     $('#projectSwitcher').addEventListener('click', e => {
       e.stopPropagation();
+      const item = e.target.closest('[data-act]');
+      if (item) {
+        const act = item.dataset.act;
+        $('#psMenu').classList.remove('open');
+        if (act === 'switch-project') {
+          Store.setActive(item.dataset.id); currentView = 'projects'; render(); toast('已切换项目', 'ok');
+        } else if (act === 'new-project') {
+          modalNewProject();
+        }
+        return;
+      }
       $('#psMenu').classList.toggle('open');
     });
     document.addEventListener('click', () => $('#psMenu').classList.remove('open'));
@@ -1264,6 +1279,20 @@ const Bridge = (() => {
   function renderTopbar() {
     const p = Store.activeProject();
     $('#psName').textContent = p ? p.name : '暂无项目';
+    // 填充项目切换下拉（此前只 toggle 空菜单，导致点击无反应）
+    const menu = $('#psMenu');
+    if (menu) {
+      const activeId = p ? p.id : null;
+      let mh = db.projects.map(item =>
+        `<div class="ps-menu-item ${item.id === activeId ? 'active' : ''}" data-act="switch-project" data-id="${item.id}">
+          <span class="pmi-emoji">${item.emoji || '▦'}</span>
+          <span class="pmi-name">${esc(item.name)}</span>
+          ${item.id === activeId ? '<span class="pmi-check">✓</span>' : ''}
+        </div>`).join('');
+      mh += `<div class="ps-menu-sep"></div>
+        <div class="ps-menu-item" data-act="new-project"><span class="pmi-emoji">＋</span><span class="pmi-name">新建项目</span></div>`;
+      menu.innerHTML = mh;
+    }
   }
   function renderNav() {
     const p = Store.activeProject();
@@ -1314,10 +1343,10 @@ const Bridge = (() => {
     const avgProg = db.projects.length ? Math.round(db.projects.reduce((a, p) => a + Store.progress(p), 0) / db.projects.length) : 0;
     let html = headHtml('projects');
     html += `<div class="stat-row">
-      ${statBox('▦', 'var(--brand)', '项目总数', db.projects.length, '个')}
-      ${statBox('▤', 'var(--violet)', '分镜总数', totalShots, '镜')}
-      ${statBox('▣', 'var(--teal)', '资产沉淀', totalAssets, '件')}
-      ${statBox('◔', 'var(--blue)', '平均进度', avgProg, '%')}
+      ${statBox('▦', 'var(--brand)', '项目总数', db.projects.length, '个', 'projects')}
+      ${statBox('▤', 'var(--violet)', '分镜总数', totalShots, '镜', 'storyboard')}
+      ${statBox('▣', 'var(--teal)', '资产沉淀', totalAssets, '件', 'assets')}
+      ${statBox('◔', 'var(--blue)', '平均进度', avgProg, '%', 'script')}
     </div>`;
     html += `<div class="card card-pad" style="margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
       <button class="btn btn-primary" data-act="new-project">＋ 新建项目</button>
@@ -1351,9 +1380,11 @@ const Bridge = (() => {
     html += '</div>';
     return html;
   }
-  function statBox(ico, color, label, val, unit) {
-    return `<div class="stat-box"><div class="stat-label"><span class="stat-ico" style="background:${color}22;color:${color}">${ico}</span>${label}</div>
-      <div class="stat-val">${val}<small>${unit}</small></div></div>`;
+  function statBox(ico, color, label, val, unit, view) {
+    return `<div class="stat-box" data-act="goto-view" data-view="${view}" title="进入${VIEW_TITLE[view] ? VIEW_TITLE[view][0] : view}">
+      <div class="stat-label"><span class="stat-ico" style="background:${color}22;color:${color}">${ico}</span>${label}</div>
+      <div class="stat-val">${val}<small>${unit}</small></div>
+      <div class="stat-go">进入 →</div></div>`;
   }
 
   // ============ ② 剧本工坊 ============
@@ -1703,9 +1734,12 @@ const Bridge = (() => {
     const i = el.dataset.i != null ? +el.dataset.i : null;
 
     // 全局类
+    if (act === 'goto-view') { const v = el.dataset.view; if (v) { currentView = v; render(); } return; }
     if (act === 'goto-projects') { currentView = 'projects'; render(); return; }
     if (act === 'new-project') { return modalNewProject(); }
-    if (act === 'open-project') { Store.setActive(el.dataset.id); currentView = 'projects'; render(); toast('已切换项目', 'ok'); return; }
+    if (act === 'switch-project' || act === 'open-project') {
+      Store.setActive(el.dataset.id); currentView = 'projects'; render(); toast('已切换项目', 'ok'); return;
+    }
 
     if (!p) return;
 
