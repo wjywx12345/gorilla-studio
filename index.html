@@ -256,6 +256,8 @@ button{cursor:pointer}
 .proj-progress .pct{font-size:10.5px;color:var(--txt-2);width:30px;text-align:right}
 .proj-foot{display:flex;gap:5px;flex-wrap:wrap;margin-top:12px}
 .proj-chip{font-size:10px;color:var(--txt-2);background:var(--bg-4);padding:3px 8px;border-radius:6px}
+.proj-chip-btn{cursor:pointer;transition:background .15s,color .15s,transform .15s}
+.proj-chip-btn:hover{background:var(--brand);color:#fff;transform:translateY(-1px)}
 
 /* 统计条 */
 .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
@@ -1370,10 +1372,10 @@ const Bridge = (() => {
           <div class="proj-meta">${p.script.title !== '未命名' ? esc(p.script.title) + ' · ' : ''}更新于 ${Store.fmtTime(p.updatedAt)}</div>
           <div class="proj-progress"><div class="progress-track"><div class="progress-fill" style="width:${prog}%"></div></div><span class="pct">${prog}%</span></div>
           <div class="proj-foot">
-            <span class="proj-chip">✎ 剧本 ${p.script.scenes.length}</span>
-            <span class="proj-chip">◈ 设定 ${p.setup.characters.length}</span>
-            <span class="proj-chip">▤ 分镜 ${p.storyboard.shots.length}</span>
-            <span class="proj-chip">✦ 生成 ${p.generate.tasks.length}</span>
+            <span class="proj-chip proj-chip-btn" data-act="proj-goto" data-id="${p.id}" data-view="script" title="进入剧本工坊">✎ 剧本 ${p.script.scenes.length}</span>
+            <span class="proj-chip proj-chip-btn" data-act="proj-goto" data-id="${p.id}" data-view="setup" title="进入设定中枢">◈ 设定 ${p.setup.characters.length}</span>
+            <span class="proj-chip proj-chip-btn" data-act="proj-goto" data-id="${p.id}" data-view="storyboard" title="进入分镜台">▤ 分镜 ${p.storyboard.shots.length}</span>
+            <span class="proj-chip proj-chip-btn" data-act="proj-goto" data-id="${p.id}" data-view="generate" title="进入生成工场">✦ 生成 ${p.generate.tasks.length}</span>
           </div>
         </div></div>`;
     });
@@ -1739,6 +1741,12 @@ const Bridge = (() => {
     if (act === 'new-project') { return modalNewProject(); }
     if (act === 'switch-project' || act === 'open-project') {
       Store.setActive(el.dataset.id); currentView = 'projects'; render(); toast('已切换项目', 'ok'); return;
+    }
+    if (act === 'proj-goto') {
+      const pid = el.dataset.id, v = el.dataset.view;
+      if (pid) Store.setActive(pid);
+      if (v && VIEW_TITLE[v]) currentView = v;
+      render(); return;
     }
 
     if (!p) return;
