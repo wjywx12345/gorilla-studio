@@ -553,6 +553,47 @@ button{cursor:pointer}
 
 @media(max-width:1100px){.lineage-layout{grid-template-columns:1fr}.lineage-side{max-width:none}}
 
+/* ============ v2.5 Agent 派单台 ============ */
+.ah-banner{display:flex;gap:12px;align-items:flex-start;background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(168,85,247,.08));border:1px solid rgba(99,102,241,.3);border-radius:10px;padding:13px 16px;margin-bottom:18px;font-size:12px;line-height:1.7;color:var(--txt-2)}
+.ah-banner-ico{font-size:16px;flex:0 0 auto;color:#818cf8}
+.ah-banner b{color:var(--txt-1)}
+.ah-layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:18px;align-items:start}
+.ah-compose .card-head h3{margin:0;font-size:14px}
+.ah-auth-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.ah-auth-state{font-size:11.5px;color:var(--txt-3)}
+.ah-label{display:block;font-size:11px;color:var(--txt-3);margin:10px 0 6px;font-weight:600;letter-spacing:.02em}
+.ah-textarea{width:100%;box-sizing:border-box;background:var(--bg-0);border:1px solid var(--line);border-radius:8px;color:var(--txt-1);padding:12px;font-family:inherit;font-size:12.5px;line-height:1.6;resize:vertical;min-height:110px;outline:none}
+.ah-textarea:focus{border-color:var(--brand)}
+.ah-input,.ah-select{width:100%;box-sizing:border-box;background:var(--bg-0);border:1px solid var(--line);border-radius:8px;color:var(--txt-1);padding:9px 11px;font-size:12px;outline:none}
+.ah-input:focus,.ah-select:focus{border-color:var(--brand)}
+.ah-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px}
+.ah-chips{display:flex;flex-wrap:wrap;gap:7px}
+.ah-chip{cursor:pointer;user-select:none;position:relative}
+.ah-chip input{position:absolute;opacity:0;width:0;height:0}
+.ah-chip span{display:inline-block;font-size:11px;padding:5px 10px;border:1px solid var(--line);border-radius:16px;color:var(--txt-2);background:var(--bg-0);transition:all .15s}
+.ah-chip input:checked+span{border-color:var(--brand);color:var(--brand);background:rgba(99,102,241,.1);font-weight:600}
+.ah-chip:hover span{border-color:var(--brand)}
+.ah-check{display:flex;gap:8px;align-items:center;font-size:11.5px;color:var(--txt-2);cursor:pointer}
+.ah-check input{accent-color:var(--brand)}
+.ah-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.ah-hint{font-size:11px;color:var(--txt-3)}
+.ah-step{display:flex;gap:10px;align-items:flex-start;margin:9px 0;font-size:11.5px;color:var(--txt-2);line-height:1.5}
+.ah-step b{flex:0 0 auto;width:18px;height:18px;border-radius:50%;background:var(--brand);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center}
+.ah-result{border:1px solid var(--line);border-left:3px solid var(--ok);border-radius:8px;padding:11px 12px;margin-bottom:10px;background:var(--bg-0)}
+.ah-result.err{border-left-color:var(--err)}
+.ah-result-head{display:flex;gap:8px;align-items:center;margin-bottom:7px;font-size:10.5px;color:var(--txt-3)}
+.ah-r-ico{color:var(--ok);font-weight:700}
+.ah-result.err .ah-r-ico{color:var(--err)}
+.ah-r-id{font-family:monospace;color:var(--txt-2)}
+.ah-r-time{margin-left:auto}
+.ah-result-body{font-size:12px;line-height:1.7;color:var(--txt-1);word-break:break-word;white-space:normal}
+.ah-help{font-size:12.5px;line-height:1.8;color:var(--txt-2)}
+.ah-help b{color:var(--txt-1)}
+.ah-help ol{padding-left:20px}
+.ah-help code{font-family:monospace;font-size:11px;color:var(--blue);background:var(--bg-0);padding:1px 5px;border-radius:3px}
+.ah-help .muted{color:var(--txt-3);font-size:11px}
+@media(max-width:1100px){.ah-layout{grid-template-columns:1fr}.ah-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -579,7 +620,7 @@ button{cursor:pointer}
     <div class="topbar-spacer"></div>
 
     <div class="save-state" id="saveState"><span class="ss-dot"></span><span id="ssText">已保存</span></div>
-    <span title="页面版本 v2.4 · 谱系视图 / 电商带货工作流 / 真实出片链路" style="font-size:10px;color:var(--txt-3);font-family:monospace;padding:0 4px">v2.4</span>
+    <span title="页面版本 v2.5 · 谱系视图 / 电商带货工作流 / Agent 派单台" style="font-size:10px;color:var(--txt-3);font-family:monospace;padding:0 4px">v2.5</span>
     <button class="btn btn-ghost btn-sm" id="btnExportData" title="把全部项目数据导出为 JSON 备份">备份</button>
     <button class="btn btn-ghost btn-sm" id="btnImportData" title="从 JSON 备份恢复数据">恢复</button>
     <input type="file" id="importFile" accept="application/json" hidden>
@@ -623,6 +664,9 @@ button{cursor:pointer}
         </li>
         <li class="nav-item" data-view="assets">
           <span class="nav-ico">▣</span><span class="nav-label">资产库</span><span class="nav-num" id="numAssets"></span>
+        </li>
+        <li class="nav-item" data-view="agenthub" title="把需求派给 WorkBuddy Agent 真执行（本机版）">
+          <span class="nav-ico">🤖</span><span class="nav-label">Agent 派单台</span>
         </li>
       </ul>
 
@@ -1803,6 +1847,163 @@ const EcomWorkflow = (() => {
 </script>
 <script>
 /* ============================================================
+   猩猩导演台 · Agent 派单信箱（本机版）
+   ------------------------------------------------------------
+   事实边界（不要改）：
+   - 网页运行在浏览器沙箱，没有执行 Agent 的能力，也不能主动触发 WorkBuddy。
+   - 官方云 SDK 只有 llm/database/auth/storage，无 agent/skill/knowledge 接口。
+   - 因此这里做的是「派单 + 结果回显」闭环，不是实时对话：
+       1) 用户在对话框写提示词、选模式/技能/知识库、带当前项目上下文；
+       2) 生成任务卡，写入本地 agent-hub/inbox/（需用户授权该目录一次），
+          并复制到剪贴板作为兜底；
+       3) 用户切到 WorkBuddy 新建任务粘贴发送 —— 这一步是真实触发 Agent 执行；
+       4) Agent 执行后把结果写回 agent-hub/outbox/<taskId>.json；
+       5) 本模块轮询 outbox，显示结果。
+   - 每一步都真实，不伪造对话、不假装执行。
+   ============================================================ */
+const AgentHub = (() => {
+  const DIR_KEY = 'gorilla_agenthub_dirname'; // 只存目录名提示，不存 handle（handle 不跨会话持久化）
+  let dirHandle = null;       // 当前会话已授权的目录句柄
+  let pollTimer = null;
+  const seen = new Set();
+
+  function supported() {
+    return typeof window !== 'undefined' && typeof window.showDirectoryPicker === 'function';
+  }
+
+  // 让用户授权 agent-hub 目录（浏览器安全要求，必须用户手势触发）
+  async function pickDir() {
+    if (!supported()) throw new Error('当前浏览器不支持目录授权，请用桌面启动器打开的 Chrome。');
+    dirHandle = await window.showDirectoryPicker({ mode: 'readwrite', id: 'gorilla-agent-hub' });
+    try { localStorage.setItem(DIR_KEY, dirHandle.name); } catch (_) {}
+    return dirHandle.name;
+  }
+
+  // 确保拿到可写目录（若本会话未授权则抛错，由 UI 引导用户点授权）
+  function needDir() {
+    if (dirHandle) return dirHandle;
+    throw new Error('尚未授权 agent-hub 目录。请先点「① 授权本地信箱」并选择项目内的 agent-hub 文件夹。');
+  }
+
+  function safeName(s) { return String(s || '').replace(/[^\w\u4e00-\u9fa5.-]/g, '_').slice(0, 60); }
+  function taskId() { return 'T' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  // 生成任务卡（Markdown），带项目上下文
+  function buildTaskCard(task, project) {
+    const ctx = project ? {
+      project: project.name,
+      type: project.type,
+      scriptTitle: project.script && project.script.title,
+      scenes: project.script && project.script.scenes ? project.script.scenes.length : 0,
+      characters: project.setup && project.setup.characters ? project.setup.characters.map(c => c.name).filter(Boolean) : [],
+      shots: project.storyboard && project.storyboard.shots ? project.storyboard.shots.length : 0,
+      tasks: project.generate && project.generate.tasks ? project.generate.tasks.length : 0,
+    } : null;
+
+    const lines = [];
+    lines.push('# 猩猩导演台 · Agent 派单');
+    lines.push('');
+    lines.push('- 任务ID：`' + task.id + '`');
+    lines.push('- 派单时间：' + task.createdAt);
+    lines.push('- 工作模式：' + ({ agent: 'Agent（直接执行，可改文件）', plan: 'Plan（先出方案）', ask: 'Ask（仅问答，不改文件）' }[task.mode] || task.mode));
+    lines.push('- 指定技能：' + (task.skills.length ? task.skills.join('、') : '未指定（由 Agent 自行判断）'));
+    lines.push('- 指定知识库：' + (task.knowledge.length ? task.knowledge.join('、') : '未指定'));
+    lines.push('- 工作目录：' + (task.workdir || '导演台项目目录'));
+    lines.push('');
+    if (task.attachContext && ctx) {
+      lines.push('## 当前项目上下文（自动附带）');
+      lines.push('- 项目：' + ctx.project + (ctx.type ? '（' + ctx.type + '）' : ''));
+      if (ctx.scriptTitle) lines.push('- 剧本：' + ctx.scriptTitle);
+      lines.push('- 场景数：' + ctx.scenes + '，角色：' + (ctx.characters.join('、') || '无') + '，镜头：' + ctx.shots + '，生成任务：' + ctx.tasks);
+      lines.push('');
+    }
+    lines.push('## 我的需求（提示词）');
+    lines.push('');
+    lines.push(task.prompt);
+    lines.push('');
+    lines.push('## 结果回传约定（重要）');
+    lines.push('执行完成后，请把最终答复写入本目录同级的 `outbox/' + task.id + '.json`，格式：');
+    lines.push('```json');
+    lines.push('{"id":"' + task.id + '","status":"done","result":"这里放最终答复（纯文本或 Markdown）","time":"ISO时间"}');
+    lines.push('```');
+    lines.push('若执行失败，status 写 "error"，result 写失败原因。导演台会自动读取并显示。');
+    return lines.join('\n');
+  }
+
+  // 写入任务到 inbox（返回是否写入成功）
+  async function submit(task, project) {
+    const card = buildTaskCard(task, project);
+    const id = task.id;
+    let written = false, method = '';
+    try {
+      const dir = needDir();
+      const inbox = await dir.getDirectoryHandle('inbox', { create: true });
+      const fh = await inbox.getFileHandle('task-' + id + '.md', { create: true });
+      const w = await fh.createWritable();
+      await w.write(card);
+      await w.close();
+      // 同时写一份机器可读的元数据，方便轮询与回溯
+      const meta = await inbox.getFileHandle('task-' + id + '.json', { create: true });
+      const w2 = await meta.createWritable();
+      await w2.write(JSON.stringify(task, null, 2));
+      await w2.close();
+      written = true; method = 'file';
+    } catch (e) {
+      method = 'clipboard'; // 降级：交给用户手动保存/粘贴
+    }
+    // 无论是否写文件，都复制到剪贴板（真实触发所需）
+    try { await navigator.clipboard.writeText(card); }
+    catch (_) {
+      // 剪贴板 API 在 http 下可能不可用，退回 textarea
+      const ta = document.createElement('textarea');
+      ta.value = card; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (_) {}
+      ta.remove();
+    }
+    return { id, written, method, card };
+  }
+
+  // 轮询 outbox，返回新完成的任务数组
+  async function pollOutbox() {
+    let dir;
+    try { dir = needDir(); } catch (_) { return []; }
+    let out;
+    try { out = await dir.getDirectoryHandle('outbox', { create: false }); } catch (_) { return []; }
+    const results = [];
+    for await (const [name, fh] of out.entries()) {
+      if (!/^task-.*\.json$/.test(name)) continue;
+      const id = name.replace(/^task-/, '').replace(/\.json$/, '');
+      if (seen.has(id)) continue;
+      try {
+        const file = await fh.getFile();
+        const txt = await file.text();
+        const obj = JSON.parse(txt);
+        seen.add(id);
+        results.push(obj);
+      } catch (_) { /* 文件可能正在写，下次再读 */ }
+    }
+    return results;
+  }
+
+  function startPolling(onResults, intervalMs = 2500) {
+    stopPolling();
+    pollTimer = setInterval(async () => {
+      const rs = await pollOutbox();
+      if (rs.length) onResults(rs);
+    }, intervalMs);
+  }
+  function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
+  function resetSeen() { seen.clear(); }
+  function rememberedDir() { try { return localStorage.getItem(DIR_KEY) || ''; } catch (_) { return ''; } }
+  function newTaskId() { return taskId(); }
+
+  return { supported, pickDir, needDir, submit, buildTaskCard, startPolling, stopPolling, resetSeen, rememberedDir, newTaskId };
+})();
+
+</script>
+<script>
+/* ============================================================
    猩猩导演台 · 主应用逻辑
    ============================================================ */
 
@@ -1827,7 +2028,8 @@ const EcomWorkflow = (() => {
     edit: ['剪辑台', '时间线剪辑：片段排序、转场、字幕，以及旁白/配乐/音效三条独立音轨。'],
     export: ['导出中心', '设置分辨率帧率，执行去字幕→合成→放大后期工序，留存导出记录。'],
     assets: ['资产库', '全流程沉淀的可复用资产：角色图、场景图、视频片段与音频。'],
-    lineage: ['谱系视图', '从现有数据自动生成的资产→分镜→生成→成片关系图。节点只表达引用，拖动只改布局，不产生第二份数据。']
+    lineage: ['谱系视图', '从现有数据自动生成的资产→分镜→生成→成片关系图。节点只表达引用，拖动只改布局，不产生第二份数据。'],
+    agenthub: ['Agent 派单台', '把需求派给 WorkBuddy Agent 真执行：可指定模式、技能、知识库，自动带当前项目上下文，结果写回这里。（本机版）']
   };
 
   // ============ 初始化 ============
@@ -1917,7 +2119,7 @@ const EcomWorkflow = (() => {
     const map = {
       projects: viewProjects, script: viewScript, setup: viewSetup,
       storyboard: viewStoryboard, generate: viewGenerate, edit: viewEdit,
-      export: viewExport, assets: viewAssets, lineage: viewLineage
+      export: viewExport, assets: viewAssets, lineage: viewLineage, agenthub: viewAgentHub
     };
     ws.innerHTML = (map[currentView] || viewProjects)();
     ws.scrollTop = 0;
@@ -2462,6 +2664,123 @@ const EcomWorkflow = (() => {
     return html;
   }
 
+  // ============ ⑩ Agent 派单台（本机打通） ============
+  // 内置技能/知识库清单（只读展示，真实可用性由 WorkBuddy 端决定）
+  const AGENT_SKILLS = [
+    'script-to-screenplay', 'short-drama', 'short-drama-breakdown',
+    'workbuddy-docx', 'workbuddy-pptx', 'workbuddy-sheetagent',
+    'tencent-docs', 'tencent-xmind', 'music-driven-product-ad', '发布为应用'
+  ];
+  const AGENT_KNOWLEDGE = ['本工作区项目文件', '资料库/知识库', '历史对话记忆'];
+
+  function viewAgentHub() {
+    const p = Store.activeProject();
+    const supported = AgentHub.supported();
+    const remembered = AgentHub.rememberedDir();
+    const actions = `<button class="btn btn-ghost btn-sm" data-act="ah-refresh">刷新结果</button>
+      <button class="btn btn-outline btn-sm" data-act="ah-help">使用说明</button>`;
+    let html = headHtml('agenthub', actions);
+
+    // 事实边界提示
+    html += `<div class="ah-banner">
+      <div class="ah-banner-ico">ⓘ</div>
+      <div><b>这是"派单"不是"实时聊天"。</b>网页本身没有执行 Agent 的能力（官方 SDK 只有文本生成）。
+      真正执行发生在 WorkBuddy：你粘贴发送后由 Agent 跑技能/查知识库/建任务，结果自动写回这里。每一步都是真的，不造假。</div>
+    </div>`;
+
+    html += `<div class="ah-layout">
+      <div class="ah-main">
+        <div class="card card-pad ah-compose">
+          <div class="card-head" style="padding:0 0 12px">
+            <h3>① 授权本地信箱</h3>
+            <span class="sub" style="margin-left:auto">${supported ? (remembered ? '上次目录：' + esc(remembered) : '浏览器支持') : '浏览器不支持'}</span>
+          </div>
+          <div class="ah-auth-row">
+            <button class="btn btn-outline btn-sm" data-act="ah-pick">授权 agent-hub 目录</button>
+            <span class="ah-auth-state" id="ahAuthState">${dirAuthorized ? '✓ 本次会话已授权，可直接派单' : '未授权 · 点左侧按钮并选择项目内的 agent-hub 文件夹'}</span>
+          </div>
+          <div class="mini-note">只需授权一次（本次会话内）。浏览器安全要求必须由你亲手选目录；网页无法自己写入任意本地路径。</div>
+        </div>
+
+        <div class="card card-pad ah-compose" style="margin-top:14px">
+          <div class="card-head" style="padding:0 0 12px"><h3>② 写提示词 + 配置</h3></div>
+          <label class="ah-label">提示词（要我帮你做什么）</label>
+          <textarea id="ahPrompt" class="ah-textarea" rows="6" placeholder="例：把当前项目的剧本改写成 30 秒电商带货反转短剧，先出分镜再出四段式提示词，用 short-drama 技能，参考资料库里的 product 资料。"></textarea>
+
+          <div class="ah-grid">
+            <div>
+              <label class="ah-label">工作模式</label>
+              <select id="ahMode" class="ah-select">
+                <option value="agent">Agent（直接执行，可改文件）</option>
+                <option value="plan">Plan（先出方案，等确认）</option>
+                <option value="ask">Ask（仅问答，不改文件）</option>
+              </select>
+            </div>
+            <div>
+              <label class="ah-label">工作目录</label>
+              <input id="ahWorkdir" class="ah-input" value="${esc(WORKSPACE_HINT)}" placeholder="默认导演台项目目录" />
+            </div>
+          </div>
+
+          <label class="ah-label" style="margin-top:12px">调用技能（可多选，可留空由 Agent 自判）</label>
+          <div class="ah-chips" id="ahSkills">
+            ${AGENT_SKILLS.map((s, i) => `<label class="ah-chip" data-act="ah-chip"><input type="checkbox" value="${esc(s)}"><span>${esc(s)}</span></label>`).join('')}
+          </div>
+
+          <label class="ah-label" style="margin-top:12px">知识库 / 上下文（可多选）</label>
+          <div class="ah-chips" id="ahKnowledge">
+            ${AGENT_KNOWLEDGE.map((s, i) => `<label class="ah-chip" data-act="ah-chip"><input type="checkbox" value="${esc(s)}"><span>${esc(s)}</span></label>`).join('')}
+          </div>
+
+          <label class="ah-check" style="margin-top:14px">
+            <input type="checkbox" id="ahAttach" checked>
+            <span>自动附带当前项目上下文（剧本标题、角色、镜头数等）${p ? ' · 当前：' + esc(p.name) : ' · 暂无项目'}</span>
+          </label>
+
+          <div class="ah-actions">
+            <button class="btn btn-primary" data-act="ah-submit">派单 → 生成任务卡并写入信箱</button>
+            <span class="ah-hint">派单后任务卡自动复制，切到 WorkBuddy 新建任务粘贴发送即可真执行。</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ah-side">
+        <div class="card card-pad">
+          <div class="card-head" style="padding:0 0 12px"><h3>结果回显</h3><span class="sub" style="margin-left:auto" id="ahCount">0 条</span></div>
+          <div id="ahResults"><div class="mini-note ah-empty-note">暂无结果。派单并在 WorkBuddy 执行后，结果会自动出现在这里（约 2.5 秒轮询）。</div></div>
+        </div>
+        <div class="card card-pad" style="margin-top:14px">
+          <div class="card-head" style="padding:0 0 12px"><h3>三步闭环</h3></div>
+          <div class="ah-step"><b>1</b><span>授权 agent-hub 目录（仅一次）</span></div>
+          <div class="ah-step"><b>2</b><span>写提示词 → 派单（任务写入 inbox 并复制）</span></div>
+          <div class="ah-step"><b>3</b><span>WorkBuddy 粘贴发送 → Agent 真执行 → 结果写回，这里显示</span></div>
+          <div class="mini-note" style="margin-top:10px">执行侧工具：<code>tools/派单.js</code>（list / show / done / fail）。Agent 用它把结果写回 outbox。</div>
+        </div>
+      </div>
+    </div>`;
+    return html;
+  }
+
+  const WORKSPACE_HINT = 'C:/Users/Administrator/WorkBuddy/spaces/2026_11_15_15-24-46';
+  let dirAuthorized = false;
+
+  function renderAgentResults(results) {
+    const box = $('#ahResults'); if (!box) return;
+    if (!results.length) return;
+    if ($('#ahEmpty')) $('#ahEmpty').remove();
+    const html = results.map(r => {
+      const ok = r.status !== 'error';
+      return `<div class="ah-result ${ok ? 'ok' : 'err'}">
+        <div class="ah-result-head"><span class="ah-r-ico">${ok ? '✓' : '⛔'}</span>
+          <span class="ah-r-id">${esc(r.id)}</span><span class="ah-r-time">${esc((r.time || '').slice(0, 19).replace('T', ' '))}</span></div>
+        <div class="ah-result-body">${nl2br(r.result || '')}</div></div>`;
+    }).join('');
+    const cur = box.querySelector('.ah-empty-note');
+    if (cur) cur.remove();
+    box.insertAdjacentHTML('afterbegin', html);
+    const cnt = $('#ahCount'); if (cnt) cnt.textContent = $$('.ah-result').length + ' 条';
+  }
+
   function bindLineageDrag() {
     const svg = $('#lnSvg'); if (!svg) return;
     const p = Store.activeProject(); if (!p) return;
@@ -2510,6 +2829,11 @@ const EcomWorkflow = (() => {
     $('#workspace').onclick = handleClick;
     $('#workspace').onchange = handleChange;
     if (currentView === 'lineage') bindLineageDrag();
+    if (currentView === 'agenthub') {
+      AgentHub.startPolling(renderAgentResults);
+    } else {
+      AgentHub.stopPolling();
+    }
   }
 
   function handleChange(e) {
@@ -2556,6 +2880,9 @@ const EcomWorkflow = (() => {
       if (v && VIEW_TITLE[v]) currentView = v;
       render(); return;
     }
+
+    // Agent 派单台：不依赖当前项目，在通用拦截前处理
+    if (act.startsWith('ah-')) { handleAgentHubAct(act, p); return; }
 
     if (!p) return;
 
@@ -2679,6 +3006,64 @@ const EcomWorkflow = (() => {
       const d = Lineage.build(p);
       const node = d.nodes.find(n => n.id === el.dataset.node);
       if (node && VIEW_TITLE[node.view]) { currentView = node.view; render(); }
+      return;
+    }
+
+  }
+
+  // Agent 派单台 action 处理（独立于项目，允许无项目派单）
+  function handleAgentHubAct(act, p) {
+    if (act === 'ah-pick') {
+      AgentHub.pickDir().then(name => {
+        dirAuthorized = true;
+        const s = $('#ahAuthState'); if (s) s.textContent = '✓ 已授权「' + name + '」，可派单';
+        toast('已授权本地信箱：' + name, 'ok');
+      }).catch(err => toast('授权失败：' + err.message, 'err'));
+      return;
+    }
+    if (act === 'ah-chip') { return; }
+    if (act === 'ah-submit') {
+      const prompt = ($('#ahPrompt') && $('#ahPrompt').value || '').trim();
+      if (!prompt) { toast('请先写提示词', 'err'); return; }
+      const skills = $$('#ahSkills input:checked').map(x => x.value);
+      const knowledge = $$('#ahKnowledge input:checked').map(x => x.value);
+      const task = {
+        id: AgentHub.newTaskId(),
+        createdAt: Store.now(),
+        prompt,
+        mode: ($('#ahMode') && $('#ahMode').value) || 'agent',
+        workdir: ($('#ahWorkdir') && $('#ahWorkdir').value.trim()) || WORKSPACE_HINT,
+        skills, knowledge,
+        attachContext: !!( $('#ahAttach') && $('#ahAttach').checked ),
+      };
+      AgentHub.submit(task, p).then(res => {
+        if (res.written) {
+          toast('任务已写入 agent-hub/inbox，任务卡已复制。切到 WorkBuddy 粘贴发送。', 'ok');
+        } else {
+          toast('未授权目录：任务卡已复制到剪贴板，请手动保存到 agent-hub/inbox/task-' + res.id + '.md', 'err');
+        }
+        if ($('#ahPrompt')) $('#ahPrompt').value = '';
+      }).catch(err => toast('派单失败：' + err.message, 'err'));
+      return;
+    }
+    if (act === 'ah-refresh') {
+      AgentHub.pollOutbox().then(rs => { if (rs.length) renderAgentResults(rs); else toast('暂无新结果'); });
+      return;
+    }
+    if (act === 'ah-help') {
+      openModal('Agent 派单台 · 使用说明', `
+        <div class="ah-help">
+          <p><b>为什么不是实时对话？</b> 网页跑在浏览器沙箱里，没有执行 Agent 的能力。官方云 SDK 只有文本生成，没有"调技能/查知识库/新建任务"的接口。硬做实时对话只能是假的，所以这里做的是真实派单闭环。</p>
+          <p><b>怎么用：</b></p>
+          <ol>
+            <li>点「授权 agent-hub 目录」，选择本项目目录下的 <code>agent-hub</code> 文件夹（浏览器安全要求，必须你亲手选，一次即可）。</li>
+            <li>写提示词，选模式/技能/知识库，勾选是否带项目上下文，点「派单」。</li>
+            <li>任务卡会写入 <code>agent-hub/inbox/</code> 并复制到剪贴板。切到 WorkBuddy，新建任务粘贴发送——这一步由 Agent 真正执行。</li>
+            <li>Agent 执行后用 <code>tools/派单.js done &lt;任务ID&gt; "结果"</code> 写回；导演台约 2.5 秒后自动显示。</li>
+          </ol>
+          <p><b>触发送达：</b>在 WorkBuddy 里说"处理导演台派单"，我会读取 inbox 逐个执行并写回结果。</p>
+          <p class="muted">仅本机可用（双击桌面启动器打开的 Chrome）。公网页访客没有本地目录授权，派单会降级为"复制到剪贴板"。</p>
+        </div>`, `<button class="btn btn-primary" data-mact="cancel">知道了</button>`);
       return;
     }
   }
