@@ -594,6 +594,17 @@ button{cursor:pointer}
 .ah-help .muted{color:var(--txt-3);font-size:11px}
 @media(max-width:1100px){.ah-layout{grid-template-columns:1fr}.ah-grid{grid-template-columns:1fr}}
 
+/* 视图前进/后退箭头（顶栏）*/
+.nav-arrows{display:flex;align-items:center;gap:4px;flex:none}
+.nav-arrow{
+  width:32px;height:32px;border-radius:9px;border:1px solid var(--line);
+  background:var(--bg-3);color:var(--txt-1);font-size:17px;line-height:1;
+  cursor:pointer;display:grid;place-items:center;transition:background .15s,border-color .15s,color .15s;
+}
+.nav-arrow:hover:not(:disabled){background:var(--brand-soft);border-color:var(--brand-line);color:var(--brand)}
+.nav-arrow:active:not(:disabled){transform:translateY(1px)}
+.nav-arrow:disabled{opacity:.32;cursor:default;background:var(--bg-2)}
+
 </style>
 </head>
 <body>
@@ -610,6 +621,11 @@ button{cursor:pointer}
       </div>
     </div>
 
+    <div class="nav-arrows" id="navArrows" title="视图前进/后退（Alt+← / Alt+→）">
+      <button class="nav-arrow" id="navBack" data-act="nav-back" aria-label="后退" disabled>←</button>
+      <button class="nav-arrow" id="navForward" data-act="nav-forward" aria-label="前进" disabled>→</button>
+    </div>
+
     <div class="project-switcher" id="projectSwitcher" title="切换项目">
       <span class="ps-dot"></span>
       <span class="ps-name" id="psName">—</span>
@@ -620,7 +636,7 @@ button{cursor:pointer}
     <div class="topbar-spacer"></div>
 
     <div class="save-state" id="saveState"><span class="ss-dot"></span><span id="ssText">已保存</span></div>
-    <span title="页面版本 v2.5 · 谱系视图 / 电商带货工作流 / Agent 派单台" style="font-size:10px;color:var(--txt-3);font-family:monospace;padding:0 4px">v2.5</span>
+    <span title="页面版本 v2.6 · 视图前进/后退箭头 / 谱系视图 / 电商带货工作流 / Agent 派单台" style="font-size:10px;color:var(--txt-3);font-family:monospace;padding:0 4px">v2.6</span>
     <button class="btn btn-ghost btn-sm" id="btnExportData" title="把全部项目数据导出为 JSON 备份">备份</button>
     <button class="btn btn-ghost btn-sm" id="btnImportData" title="从 JSON 备份恢复数据">恢复</button>
     <input type="file" id="importFile" accept="application/json" hidden>
@@ -2018,6 +2034,54 @@ const AgentHub = (() => {
   let db;
   let saveTimer = null;
 
+  // ===== 视图浏览历史栈（前进/后退箭头）=====
+  // 只记录"视图级"跳转，不记录视图内的编辑重渲染。每项含 view + 当时的项目 id，
+  // 后退时恢复当时项目，避免"退回旧视图却停在新项目"的错乱。
+  const viewHistory = [{ view: 'projects', projectId: null }];
+  let historyIdx = 0;
+
+  function navigate(view, projectId) {
+    if (!view || !VIEW_TITLE[view]) return;
+    const pid = projectId !== undefined ? projectId : (Store.activeProject() || {}).id || null;
+    const cur = viewHistory[historyIdx];
+    if (cur && cur.view === view && cur.projectId === pid) { render(); return; }
+    // 截断"前进"分支，压入新节点
+    viewHistory.splice(historyIdx + 1);
+    viewHistory.push({ view, projectId: pid });
+    if (viewHistory.length > 100) viewHistory.shift();
+    historyIdx = viewHistory.length - 1;
+    currentView = view;
+    render();
+  }
+
+  function goBack() {
+    if (historyIdx <= 0) return;
+    historyIdx--;
+    applyHistory(viewHistory[historyIdx]);
+  }
+  function goForward() {
+    if (historyIdx >= viewHistory.length - 1) return;
+    historyIdx++;
+    applyHistory(viewHistory[historyIdx]);
+  }
+  function applyHistory(entry) {
+    if (!entry) return;
+    if (entry.projectId && Store.getDB().projects.some(x => x.id === entry.projectId)) {
+      Store.setActive(entry.projectId);
+    }
+    currentView = entry.view;
+    render();
+  }
+  function updateNavArrows() {
+    const back = $('#navBack'), fwd = $('#navForward');
+    if (!back || !fwd) return;
+    back.disabled = historyIdx <= 0;
+    fwd.disabled = historyIdx >= viewHistory.length - 1;
+    const prev = viewHistory[historyIdx - 1], next = viewHistory[historyIdx + 1];
+    back.title = prev ? ('后退到：' + (VIEW_TITLE[prev.view] ? VIEW_TITLE[prev.view][0] : prev.view) + '（Alt+←）') : '没有更早的视图了';
+    fwd.title = next ? ('前进到：' + (VIEW_TITLE[next.view] ? VIEW_TITLE[next.view][0] : next.view) + '（Alt+→）') : '没有更新的视图了';
+  }
+
   const TYPE_LABEL = { novel: '小说改编', news: '新闻热点', idea: '一句话创意' };
   const VIEW_TITLE = {
     projects: ['项目台', '所有创作项目的总览。每个项目是一条从文字到成片的完整流水线。'],
@@ -2058,10 +2122,18 @@ const AgentHub = (() => {
     $('#navList').parentElement.addEventListener('click', e => {
       const item = e.target.closest('.nav-item');
       if (!item) return;
-      currentView = item.dataset.view;
-      render();
+      navigate(item.dataset.view);
     });
     $('#brand').addEventListener('click', () => confirmReset());
+
+    // 前进/后退箭头 + 键盘快捷键（Alt+← / Alt+→）
+    $('#navBack').addEventListener('click', goBack);
+    $('#navForward').addEventListener('click', goForward);
+    document.addEventListener('keydown', e => {
+      if (!e.altKey || e.ctrlKey || e.metaKey) return;
+      if (e.key === 'ArrowLeft') { e.preventDefault(); goBack(); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); goForward(); }
+    });
 
     $('#projectSwitcher').addEventListener('click', e => {
       e.stopPropagation();
@@ -2070,7 +2142,7 @@ const AgentHub = (() => {
         const act = item.dataset.act;
         $('#psMenu').classList.remove('open');
         if (act === 'switch-project') {
-          Store.setActive(item.dataset.id); currentView = 'projects'; render(); toast('已切换项目', 'ok');
+          Store.setActive(item.dataset.id); navigate('projects', item.dataset.id); toast('已切换项目', 'ok');
         } else if (act === 'new-project') {
           modalNewProject();
         } else if (act === 'edit-project') {
@@ -2115,6 +2187,7 @@ const AgentHub = (() => {
     refresh();
     renderTopbar();
     renderNav();
+    updateNavArrows();
     const ws = $('#workspace');
     const map = {
       projects: viewProjects, script: viewScript, setup: viewSetup,
@@ -2816,7 +2889,7 @@ const AgentHub = (() => {
         toast('布局已保存（仅坐标，业务数据未改动）', 'ok');
       } else {
         const node = d.nodes.find(n => n.id === drag.id);
-        if (node && VIEW_TITLE[node.view]) { currentView = node.view; render(); }
+        if (node && VIEW_TITLE[node.view]) navigate(node.view);
       }
       drag = null;
     };
@@ -2865,20 +2938,20 @@ const AgentHub = (() => {
     const i = el.dataset.i != null ? +el.dataset.i : null;
 
     // 全局类
-    if (act === 'goto-view') { const v = el.dataset.view; if (v) { currentView = v; render(); } return; }
-    if (act === 'goto-projects') { currentView = 'projects'; render(); return; }
+    if (act === 'goto-view') { const v = el.dataset.view; if (v) navigate(v); return; }
+    if (act === 'goto-projects') { navigate('projects'); return; }
     if (act === 'new-project') { return modalNewProject(); }
     if (act === 'new-ecom') { return modalEcom(); }
     if (act === 'edit-project') { return modalEditProject(el.dataset.id); }
     if (act === 'del-project') { return modalDelProject(el.dataset.id); }
     if (act === 'switch-project' || act === 'open-project') {
-      Store.setActive(el.dataset.id); currentView = 'projects'; render(); toast('已切换项目', 'ok'); return;
+      Store.setActive(el.dataset.id); navigate('projects', el.dataset.id); toast('已切换项目', 'ok'); return;
     }
     if (act === 'proj-goto') {
       const pid = el.dataset.id, v = el.dataset.view;
       if (pid) Store.setActive(pid);
-      if (v && VIEW_TITLE[v]) currentView = v;
-      render(); return;
+      if (v && VIEW_TITLE[v]) navigate(v, pid || undefined); else render();
+      return;
     }
 
     // Agent 派单台：不依赖当前项目，在通用拦截前处理
@@ -2972,7 +3045,7 @@ const AgentHub = (() => {
     if (act === 'add-clip') { return modalClip(p); }
     if (act === 'toggle-sub') { p.edit.subtitles = !p.edit.subtitles; scheduleSave(); render(); return; }
     if (act === 'save-bgm') { p.edit.bgm = $('#bgmInput').value; scheduleSave(); toast('配乐已保存', 'ok'); return; }
-    if (act === 'edit-to-export') { currentView = 'export'; render(); return; }
+    if (act === 'edit-to-export') { navigate('export'); return; }
 
     // 导出中心
     if (act === 'do-export') {
@@ -3005,7 +3078,7 @@ const AgentHub = (() => {
       }
       const d = Lineage.build(p);
       const node = d.nodes.find(n => n.id === el.dataset.node);
-      if (node && VIEW_TITLE[node.view]) { currentView = node.view; render(); }
+      if (node && VIEW_TITLE[node.view]) navigate(node.view);
       return;
     }
 
@@ -3141,7 +3214,7 @@ const AgentHub = (() => {
           brandColor: $('#mEcolor').value
         });
         Store.addProjectObject(proj);
-        closeModal(); refresh(); currentView = 'lineage'; render();
+        closeModal(); refresh(); navigate('lineage', proj.id);
         toast('已生成 7 镜完整项目，已跳到谱系视图', 'ok');
       } catch (e) { toast('生成失败：' + (e.message || '未知错误'), 'err'); }
     };
