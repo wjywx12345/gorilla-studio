@@ -511,6 +511,48 @@ button{cursor:pointer}
   background:var(--bg-0);border:1px solid var(--line);border-radius:8px;padding:12px;
 }
 
+/* ============ v2.4 谱系视图 ============ */
+.lineage-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+.lineage-canvas-wrap{min-width:0}
+.ln-hint{font-size:11px;color:var(--txt-2);margin-bottom:10px;line-height:1.6}
+.lineage-scroll{overflow:auto;max-height:calc(100vh - 250px);border:1px solid var(--line);border-radius:12px;background:var(--bg-0);
+  background-image:radial-gradient(circle,rgba(139,148,165,.13) 1px,transparent 1px);background-size:22px 22px}
+.lineage-svg{display:block;touch-action:none}
+.ln-col{font-size:11.5px;fill:var(--txt-2);letter-spacing:.5px}
+.ln-edge{stroke:#5d6675;stroke-width:1.3;opacity:.75}
+.ln-edge.gen{stroke:#ff9d3d;opacity:.9}
+.ln-edge.tail{stroke:#9b7bff;stroke-dasharray:5 4;opacity:.9}
+.ln-edge.clip{stroke:#3ecfb0;stroke-width:1.8;opacity:1}
+.ln-edge.asset{stroke:#5aa9ff;opacity:.8}
+.ln-node{cursor:grab;user-select:none}
+.ln-node:active{cursor:grabbing}
+.ln-node:hover rect:first-child{stroke-width:2}
+.ln-ico{font-size:15px;fill:var(--txt-1)}
+.ln-label{font-size:12.5px;fill:var(--txt-0);font-weight:600}
+.ln-sub{font-size:10px;fill:var(--txt-2)}
+.ln-kind{font-size:9px;fill:var(--txt-3)}
+.ln-node.bad rect:first-child{stroke-dasharray:4 3}
+.lineage-side{min-width:0}
+.ln-issue{display:flex;gap:8px;align-items:flex-start;padding:8px 6px;border-bottom:1px solid var(--line-soft);font-size:11px;line-height:1.6;color:var(--txt-1);cursor:pointer}
+.ln-issue:hover{background:var(--bg-4);border-radius:6px}
+.ln-issue-mark{flex:none;font-size:11px}
+.ln-issue.warn .ln-issue-mark{color:var(--warn)}
+.ln-issue.err .ln-issue-mark{color:var(--err)}
+.ln-issue.info .ln-issue-mark{color:var(--txt-3)}
+.ln-gate{display:flex;gap:9px;align-items:flex-start;padding:7px 4px;font-size:11.5px;color:var(--txt-2);cursor:pointer;border-bottom:1px solid var(--line-soft)}
+.ln-gate span:first-child{width:14px;flex:none;color:var(--warn)}
+.ln-gate.done span:first-child{color:var(--ok)}
+.ln-gate.done{color:var(--txt-1)}
+
+/* ============ v2.4 电商带货工作流 ============ */
+.ecom-cta{border-color:var(--brand-line)!important;color:var(--brand-2)!important}
+.ecom-form-note{font-size:11.5px;line-height:1.7;color:var(--txt-1);background:var(--brand-soft);border:1px solid var(--brand-line);border-radius:8px;padding:10px 12px;margin-bottom:14px}
+.ecom-steps{font-size:11px;line-height:1.9;color:var(--txt-2)}
+.ecom-steps b{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:4px;background:var(--brand-soft);color:var(--brand-2);font-size:10px;margin-right:6px}
+.ecom-steps code{font-family:monospace;font-size:10.5px;color:var(--blue);background:var(--bg-0);padding:1px 4px;border-radius:3px}
+
+@media(max-width:1100px){.lineage-layout{grid-template-columns:1fr}.lineage-side{max-width:none}}
+
 </style>
 </head>
 <body>
@@ -537,7 +579,7 @@ button{cursor:pointer}
     <div class="topbar-spacer"></div>
 
     <div class="save-state" id="saveState"><span class="ss-dot"></span><span id="ssText">已保存</span></div>
-    <span title="页面版本 v2.2 · 若图标点不开说明缓存未更新" style="font-size:10px;color:var(--txt-3);font-family:monospace;padding:0 4px">v2.2</span>
+    <span title="页面版本 v2.4 · 谱系视图 / 电商带货工作流 / 真实出片链路" style="font-size:10px;color:var(--txt-3);font-family:monospace;padding:0 4px">v2.4</span>
     <button class="btn btn-ghost btn-sm" id="btnExportData" title="把全部项目数据导出为 JSON 备份">备份</button>
     <button class="btn btn-ghost btn-sm" id="btnImportData" title="从 JSON 备份恢复数据">恢复</button>
     <input type="file" id="importFile" accept="application/json" hidden>
@@ -574,8 +616,11 @@ button{cursor:pointer}
         </li>
       </ul>
 
-      <div class="nav-section-label">资源</div>
+      <div class="nav-section-label">总览与资源</div>
       <ul class="nav-list">
+        <li class="nav-item" data-view="lineage">
+          <span class="nav-ico">◎</span><span class="nav-label">谱系视图</span>
+        </li>
         <li class="nav-item" data-view="assets">
           <span class="nav-ico">▣</span><span class="nav-label">资产库</span><span class="nav-num" id="numAssets"></span>
         </li>
@@ -630,6 +675,8 @@ ${l.stack}`)}else c=o?.stack??"";let f=this.url.toString().length;return o?.name
 
 const Store = (() => {
   const KEY = 'gorilla_studio_v1';
+  // 数据 schema 版本（v2.3 起）。与页面版本分开：只做字段补全，不改已有数据。
+  const SCHEMA_VERSION = 2;
 
   const uid = (p = 'id') => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const now = () => new Date().toISOString();
@@ -637,6 +684,75 @@ const Store = (() => {
     const d = new Date(iso);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   };
+
+  /* ---------- 向后兼容迁移（v2.3 大乐上人范式） ----------
+     线上已有 localStorage 数据是用旧结构写的。这里只补缺失字段，
+     绝不覆盖已有值——保证升级后老项目照常打开、数据不丢。
+     新增字段全部来自《大乐上人》拆解的"资产层+分段生成+音频层+后期层"四层结构。 */
+  function blankAudioTracks() {
+    return [
+      { id: 'AUD-VO', name: '旁白/音色', kind: 'vo', items: [] },
+      { id: 'AUD-BGM', name: '配乐', kind: 'bgm', items: [] },
+      { id: 'AUD-SFX', name: '音效', kind: 'sfx', items: [] }
+    ];
+  }
+  function migrateProject(p) {
+    if (!p || typeof p !== 'object') return p;
+    // 形态档：默认真人短剧；旧数据没有 production 就补 live_action
+    if (p.production == null) p.production = 'live_action';
+    // 资产层：音色锚点（叙述者/角色音色样本），与人物三视图并列
+    if (!p.setup) p.setup = {};
+    if (!Array.isArray(p.setup.voiceAssets)) p.setup.voiceAssets = [];
+    if (!Array.isArray(p.setup.characters)) p.setup.characters = [];
+    if (!Array.isArray(p.setup.scenes)) p.setup.scenes = [];
+    if (!Array.isArray(p.setup.props)) p.setup.props = [];
+    // 分段生成：镜头可标注 generation mode / 尾帧衔接 / 转场 / 声音分层 / 分段组
+    if (!p.storyboard) p.storyboard = {};
+    if (!Array.isArray(p.storyboard.shots)) p.storyboard.shots = [];
+    if (!Array.isArray(p.storyboard.segments)) p.storyboard.segments = [];
+    p.storyboard.shots.forEach(s => {
+      if (s.mode == null) s.mode = 'text2video';       // text2video / mixed2video / videoExtend2video
+      if (s.tailFrom == null) s.tailFrom = '';         // 承接的上一镜 ID
+      if (s.transition == null) s.transition = '硬切';
+      if (s.soundLayers == null) s.soundLayers = [];   // [{kind,text,voiceId}]
+      if (s.segment == null) s.segment = '';          // 所属分段组 ID
+    });
+    // 任务接力字段
+    if (!p.generate) p.generate = {};
+    if (!Array.isArray(p.generate.tasks)) p.generate.tasks = [];
+    p.generate.tasks.forEach(t => {
+      if (t.mode == null) t.mode = 'text2video';
+      if (t.tailFrom == null) t.tailFrom = '';
+      if (t.dependsOn == null) t.dependsOn = [];
+    });
+    // 音频层：三条独立轨；旧的单一 bgm 迁移进配乐轨，不丢
+    if (!p.edit) p.edit = {};
+    if (!Array.isArray(p.edit.audioTracks)) {
+      const tracks = blankAudioTracks();
+      if (p.edit.bgm) tracks[1].items.push({ id: Store_uid('aud'), name: p.edit.bgm, source: '旧版配乐' });
+      p.edit.audioTracks = tracks;
+    }
+    if (!Array.isArray(p.edit.clips)) p.edit.clips = [];
+    // 版本快照：先粗后精可回退
+    if (!Array.isArray(p.versions)) p.versions = [];
+    // 后期工序：去字幕 → 合成 → 放大
+    if (!p.export) p.export = {};
+    if (!p.export.pipeline) {
+      p.export.pipeline = { removeSubtitle: true, compose: true, upscale: false, upscaleTo: '2K' };
+    }
+    if (!p.export.settings) p.export.settings = { resolution: '1080×1920', fps: '30', format: 'MP4', bitrate: '高', ratio: '9:16 竖屏' };
+    if (!Array.isArray(p.export.records)) p.export.records = [];
+    if (!Array.isArray(p.assets)) p.assets = [];
+    // v2.4 谱系视图：只存布局坐标与隐藏集合，业务数据仍以各分区为唯一事实来源。
+    // 旧数据没有该字段时补空，不复制任何业务节点——避免产生第二份真相源。
+    if (!p.lineage || typeof p.lineage !== 'object') p.lineage = {};
+    if (!p.lineage.layout || typeof p.lineage.layout !== 'object' || Array.isArray(p.lineage.layout)) p.lineage.layout = {};
+    if (!Array.isArray(p.lineage.hidden)) p.lineage.hidden = [];
+    if (p.ecom == null) p.ecom = null;
+    return p;
+  }
+  // 避免在上文引用尚未定义的 uid（迁移函数在闭包内，uid 已声明于顶部，此别名仅为可读性）
+  function Store_uid(prefix) { return uid(prefix); }
 
   // ---------- 种子：第1章改编产物 ----------
   function seedData() {
@@ -654,6 +770,7 @@ const Store = (() => {
           cover: 'linear-gradient(135deg,#ff6b35,#c2410c)',
           createdAt: now(),
           updatedAt: now(),
+          production: 'live_action',
 
           script: {
             source: '腊月二十三，小年。北京的风跟砂纸似的……（小说第1章《一百块》全文，详见长篇小说/正文）',
@@ -695,22 +812,33 @@ const Store = (() => {
               { id: 'PROP-100', name: '一百块红票子', desc: '老蔡单独给的一百块，陈大年折成四折收进口袋——核心物证，后续打脸伏笔。' },
               { id: 'PROP-DRAWING', name: '改造图纸', desc: '南锣会馆四合院改造项目，七架梁标"装饰，拆除"——集尾钩子。' },
               { id: 'PROP-MOKUANG', name: '枣木墨斗', desc: '爷爷刻的"陈"字，三代传下，父亲临终交代"手艺不能断"的载体。' }
+            ],
+            voiceAssets: [
+              { id: 'VOICE-NARR', name: '旁白/说书', desc: '中老年男声，沙哑克制，语速偏慢——对标大乐上人的说书先生音色锚点。', sample: '8s 干净人声样本', voiceId: '' }
             ]
           },
 
           storyboard: {
             targetSeconds: 180,
+            segments: [
+              { id: 'SEG-1', name: '片段一·发钱与折钱', shotIds: ['SHOT-EP001-001', 'SHOT-EP001-002', 'SHOT-EP001-012', 'SHOT-EP001-015', 'SHOT-EP001-025'] },
+              { id: 'SEG-2', name: '片段二·图纸与收钩', shotIds: ['SHOT-EP001-032', 'SHOT-EP001-042', 'SHOT-EP001-049'] }
+            ],
             shots: [
               { id: 'SHOT-EP001-001', name: '小年工地板房', sceneId: 'EP001-SC001', duration: 4,
                 purpose: '交代时间地点与压抑氛围，立住陈大年的边缘位置。',
                 shotSize: '全景→中景', camera: '板房内侧向门口', movement: '缓慢推',
                 start: '狭长板房挤满工人，顶灯昏白', action: '镜头推进，陈大年贴门站着，门缝冷风灌入', end: '定格在陈大年挨门而立',
-                assets: 'CHAR-DANIAN,CHAR-BG', sound: '[画面文字]腊月二十三，小年。风声、人声嘈杂。' },
+                assets: 'CHAR-DANIAN,CHAR-BG', sound: '[画面文字]腊月二十三，小年。风声、人声嘈杂。',
+                mode: 'text2video', segment: 'SEG-1', transition: '硬切', tailFrom: '',
+                soundLayers: [{ kind: 'ambience', text: '板房风声、人声嘈杂', voiceId: '' }] },
               { id: 'SHOT-EP001-002', name: '点名发钱', sceneId: 'EP001-SC001', duration: 5,
                 purpose: '立住老蔡的掌控姿态与"钱在减少"的视觉压力。',
                 shotSize: '中景', camera: '过陈大年肩拍折叠桌', movement: '固定',
                 start: '桌上现金、账本、中华烟', action: '老蔡点名，工人上前领钱，现金摞变薄', end: '现金摞明显矮一截',
-                assets: 'CHAR-CAI,CHAR-BG,PROP-CASH', sound: '老蔡：跟我干的，亏待不了你们。' },
+                assets: 'CHAR-CAI,CHAR-BG,PROP-CASH', sound: '老蔡：跟我干的，亏待不了你们。',
+                mode: 'videoExtend2video', segment: 'SEG-1', transition: '硬切', tailFrom: 'SHOT-EP001-001',
+                soundLayers: [{ kind: 'dialogue', text: '老蔡：跟我干的，亏待不了你们。', voiceId: 'VOICE-CAI' }] },
               { id: 'SHOT-EP001-012', name: '满是茧的手', sceneId: 'EP001-SC001', duration: 4,
                 purpose: '全剧核心视觉锚点——劳动者的手，用身体细节立人。',
                 shotSize: '手部特写', camera: '顶光', movement: '固定',
@@ -760,7 +888,20 @@ const Store = (() => {
             ]
           },
 
+          versions: [
+            { id: 'ver_1', name: '粗剪 v1', note: '先粗后精：验证节奏用，保留可回退', time: now(), snapshot: null }
+          ],
+
           edit: {
+            audioTracks: [
+              { id: 'AUD-VO', name: '旁白/音色', kind: 'vo', items: [
+                { id: 'aud_vo1', name: '开场旁白', voiceId: 'VOICE-NARR', text: '腊月二十三，北京，小年。', duration: 5, source: '设定中枢·音色锚点' }
+              ] },
+              { id: 'AUD-BGM', name: '配乐', kind: 'bgm', items: [
+                { id: 'aud_bgm1', name: '低沉弦乐·市井氛围', voiceId: '', text: '', duration: 0, source: '音效库' }
+              ] },
+              { id: 'AUD-SFX', name: '音效', kind: 'sfx', items: [] }
+            ],
             clips: [
               { id: 'clip_1', shotId: 'SHOT-EP001-001', name: '小年工地板房', duration: 4, color: '#ff6b35', track: 'V1', transition: '硬切' },
               { id: 'clip_2', shotId: 'SHOT-EP001-002', name: '点名发钱', duration: 5, color: '#ff9d3d', track: 'V1', transition: '叠化' },
@@ -775,6 +916,7 @@ const Store = (() => {
 
           export: {
             settings: { resolution: '1080×1920', fps: '30', format: 'MP4', bitrate: '高', ratio: '9:16 竖屏' },
+            pipeline: { removeSubtitle: true, compose: true, upscale: true, upscaleTo: '2K' },
             records: [
               { id: 'exp_1', name: 'EP001_一百块_v1', time: now(), settings: '1080×1920 · 30fps · MP4', status: 'done', size: '186 MB' }
             ]
@@ -797,12 +939,14 @@ const Store = (() => {
           cover: 'linear-gradient(135deg,#5aa9ff,#2c5fa8)',
           createdAt: now(),
           updatedAt: now(),
+          production: 'live_action',
           script: { source: '', title: '未命名', targetSeconds: 90, estimatedSeconds: 0, voicedChars: 0, scenes: [] },
-          setup: { characters: [], scenes: [], props: [] },
-          storyboard: { targetSeconds: 90, shots: [], fullTotal: 0, fullCount: 0 },
+          setup: { characters: [], scenes: [], props: [], voiceAssets: [] },
+          storyboard: { targetSeconds: 90, shots: [], segments: [], fullTotal: 0, fullCount: 0 },
           generate: { tasks: [] },
-          edit: { clips: [], subtitles: true, bgm: '' },
-          export: { settings: { resolution: '1080×1920', fps: '30', format: 'MP4', bitrate: '高', ratio: '9:16 竖屏' }, records: [] },
+          versions: [],
+          edit: { audioTracks: blankAudioTracks(), clips: [], subtitles: true, bgm: '' },
+          export: { settings: { resolution: '1080×1920', fps: '30', format: 'MP4', bitrate: '高', ratio: '9:16 竖屏' }, pipeline: { removeSubtitle: true, compose: true, upscale: false, upscaleTo: '2K' }, records: [] },
           assets: []
         }
       ]
@@ -814,9 +958,17 @@ const Store = (() => {
   function load() {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) { db = JSON.parse(raw); return db; }
+      if (raw) {
+        db = JSON.parse(raw);
+        const n = (db.projects || []).length;
+        (db.projects || []).forEach(migrateProject);  // 旧数据就地补全，不覆盖已有值
+        db.schemaVersion = SCHEMA_VERSION;
+        if (n) save();
+        return db;
+      }
     } catch (e) { console.warn('读取失败，重建种子', e); }
     db = seedData();
+    db.schemaVersion = SCHEMA_VERSION;
     save();
     return db;
   }
@@ -839,13 +991,17 @@ const Store = (() => {
       emoji: type === 'novel' ? '📖' : type === 'news' ? '📰' : '💡',
       cover: covers[Math.floor(Math.random() * covers.length)],
       createdAt: now(), updatedAt: now(),
+      production: 'live_action',
       script: { source: '', title: '未命名', targetSeconds: 90, estimatedSeconds: 0, voicedChars: 0, scenes: [] },
-      setup: { characters: [], scenes: [], props: [] },
-      storyboard: { targetSeconds: 90, shots: [], fullTotal: 0, fullCount: 0 },
+      setup: { characters: [], scenes: [], props: [], voiceAssets: [] },
+      storyboard: { targetSeconds: 90, shots: [], segments: [], fullTotal: 0, fullCount: 0 },
       generate: { tasks: [] },
-      edit: { clips: [], subtitles: true, bgm: '' },
-      export: { settings: { resolution: '1080×1920', fps: '30', format: 'MP4', bitrate: '高', ratio: '9:16 竖屏' }, records: [] },
-      assets: []
+      versions: [],
+      edit: { audioTracks: blankAudioTracks(), clips: [], subtitles: true, bgm: '' },
+      export: { settings: { resolution: '1080×1920', fps: '30', format: 'MP4', bitrate: '高', ratio: '9:16 竖屏' }, pipeline: { removeSubtitle: true, compose: true, upscale: false, upscaleTo: '2K' }, records: [] },
+      assets: [],
+      lineage: { layout: {}, hidden: [] },
+      ecom: null
     };
   }
   function addProject(name, type) {
@@ -867,13 +1023,72 @@ const Store = (() => {
     if (patch.name != null) p.name = patch.name;
     if (patch.type != null) p.type = patch.type;
     if (patch.emoji != null) p.emoji = patch.emoji;
+    if (patch.production != null) p.production = patch.production;  // 形态档切换
     p.updatedAt = now();
     save();
     return p;
   }
 
+  // ---------- 大乐上人范式：版本快照 / 后期工序 ----------
+  function saveVersion(projectId, name, note, snapshot) {
+    const d = getDB();
+    const p = d.projects.find(x => x.id === projectId);
+    if (!p) return null;
+    if (!Array.isArray(p.versions)) p.versions = [];
+    const v = { id: uid('ver'), name: name || `版本 v${p.versions.length + 1}`, note: note || '', time: now(), snapshot: snapshot || null };
+    p.versions.unshift(v);
+    p.updatedAt = now();
+    save();
+    return v;
+  }
+  function updatePipeline(projectId, patch) {
+    const d = getDB();
+    const p = d.projects.find(x => x.id === projectId);
+    if (!p) return null;
+    if (!p.export.pipeline) p.export.pipeline = { removeSubtitle: true, compose: true, upscale: false, upscaleTo: '2K' };
+    Object.assign(p.export.pipeline, patch || {});
+    save();
+    return p.export.pipeline;
+  }
+
+  // ---------- v2.4 谱系视图：只持久化布局，不复制业务数据 ----------
+  function saveLineageLayout(projectId, layout, hidden) {
+    const d = getDB();
+    const p = d.projects.find(x => x.id === projectId);
+    if (!p) return false;
+    if (!p.lineage || typeof p.lineage !== 'object') p.lineage = {};
+    p.lineage.layout = layout || {};
+    if (Array.isArray(hidden)) p.lineage.hidden = hidden;
+    save();  // 布局变更不写 updatedAt：它不是创作内容变更
+    return true;
+  }
+  function resetLineageLayout(projectId) {
+    const d = getDB();
+    const p = d.projects.find(x => x.id === projectId);
+    if (!p) return false;
+    p.lineage = { layout: {}, hidden: [] };
+    save();
+    return true;
+  }
+  // 模板创建的完整项目：走同一入口，不绕过迁移
+  function addProjectObject(obj) {
+    const d = getDB();
+    if (!obj || typeof obj !== 'object') throw new Error('项目数据无效');
+    if (!obj.id) obj.id = uid('proj');
+    migrateProject(obj);
+    d.projects.unshift(obj);
+    d.activeProjectId = obj.id;
+    save();
+    return obj;
+  }
+
   // ---------- 导入导出备份 ----------
   function exportBackup() { return JSON.stringify(getDB(), null, 2); }
+  function exportProject(projectId) {
+    const d = getDB();
+    const p = d.projects.find(x => x.id === projectId);
+    return p ? JSON.stringify(p, null, 2) : null;
+  }
   function importBackup(json) {
     const parsed = JSON.parse(json);
     if (!parsed.projects || !Array.isArray(parsed.projects)) throw new Error('格式不正确');
@@ -896,8 +1111,8 @@ const Store = (() => {
 
   return {
     uid, now, fmtTime, load, save, getDB, activeProject, setActive,
-    addProject, deleteProject, updateProject, exportBackup, importBackup, resetToSeed, progress,
-    emptyProject
+    addProject, addProjectObject, deleteProject, updateProject, exportBackup, exportProject, importBackup, resetToSeed, progress,
+    emptyProject, saveVersion, updatePipeline, migrateProject, saveLineageLayout, resetLineageLayout
   };
 })();
 
@@ -973,7 +1188,18 @@ const CloudAI = (() => {
 
   const SYS_STORYBOARD = '你是短剧分镜师。把剧本拆成竖屏9:16逐镜分镜。只输出 Markdown，不要解释。每个镜头格式固定：以「## SHOT-EP001-NNN · 镜头名」开头，下面依次是 - 来源：、- 时长：Ns（3-8秒）、- 目的：、- 景别/机位：、- 运镜：、- 起点：、- 动作：、- 终点：、- 出场设定：、- 声音：。逐镜完整，末尾加「## 整集汇总」写镜头数与秒数加总。';
 
-  const SYS_PROMPT = '你是 AI 视频/图片生成提示词专家。把镜头描述改写成英文提示词，用于即梦/Seedance 等工具。输出单行：9:16 vertical, 主体外貌与服装, 动作, 场景与光线, cinematic, 镜头语言。只输出提示词本身。';
+  // 四段式提示词模板，对标《大乐上人》画布真实 prompt 结构：
+  // 声明行 + 分镜 + 声音设计 + 负面词。真人档走精简单行，AI 档走完整四段。
+  const SYS_PROMPT = '你是 AI 视频/图片生成提示词专家。把镜头描述改写成提示词，用于即梦/Seedance/LibTV 等工具。只输出提示词本身，不要解释。';
+
+  const SYS_PROMPT_STRUCTURED = `你是 AI 视频生成提示词专家。按《大乐上人》画布的真实 prompt 结构，输出四段式提示词，只输出提示词本身，不要解释：
+
+【声明】一行写明：画幅、时长秒数、时代/地点、质感（如"16:9, 12s, 清代洛阳水陆庵, 真实写实电影质感"）。
+【分镜】按镜头1/镜头2…分切，每镜写清：景别、机位、人物动作、对白（用引号）、视线方向、时长。
+【声音设计】分层写：环境声、对白/旁白、音效；若不需要配乐明确写"全程无BGM"。
+【负面提示词】一长串明确排除项（变形手、多余人物、文字水印、画质模糊等）。
+
+要求：若给的镜头带"生成模式"（text2video/mixed2video/videoExtend2video）、"衔接尾帧"、"转场"、音色锚点，必须写进对应段落。英文输出，术语专业。`;
 
   async function generateScript(source, type, seconds, onChunk) {
     const kind = { novel: '小说', news: '新闻热点', idea: '一句话创意' }[type] || '文字素材';
@@ -981,14 +1207,27 @@ const CloudAI = (() => {
     return ask(SYS_SCRIPT, user, { onChunk, temperature: 0.85 });
   }
 
-  async function generateStoryboard(scriptText, seconds, onChunk) {
+  const SYS_STORYBOARD_AI = '你是 AI 生成片分镜师。把剧本拆成逐镜分镜。只输出 Markdown，不要解释。每个镜头格式：以「## SHOT-EP001-NNN · 镜头名」开头，下面依次是 - 来源：、- 时长：Ns（AI 生成片用长镜，8-15秒，允许30秒以上）、- 目的：、- 景别/机位：、- 运镜：、- 起点：、- 动作：、- 终点：、- 出场设定：、- 声音：、- 生成模式：（text2video/mixed2video/videoExtend2video）、- 衔接：（承接哪镜尾帧）、- 转场：（遮挡慢溶/硬切等）、- 声音分层：（旁白[VOICE-ID]/环境/音效/音乐，用｜分隔）。AI 片靠长镜头+溶接+声音铺满维持张力，不要快切。末尾加「## 整集汇总」写镜头数与秒数加总。';
+
+  async function generateStoryboard(scriptText, seconds, onChunk, production) {
     const user = `目标集长：约 ${seconds || 90} 秒\n\n剧本：\n${String(scriptText || '').slice(0, 6000)}\n\n请拆成分镜。`;
-    return ask(SYS_STORYBOARD, user, { onChunk, temperature: 0.7 });
+    const sys = production === 'ai_generated' ? SYS_STORYBOARD_AI : SYS_STORYBOARD;
+    return ask(sys, user, { onChunk, temperature: 0.7 });
   }
 
-  async function generatePrompt(shot, characters, onChunk) {
+  async function generatePrompt(shot, characters, onChunk, opts = {}) {
     const refs = (characters || []).map(c => `${c.name}=${c.prompt || c.desc || ''}`).join('; ');
-    const user = `镜头：${shot.name || ''}\n画面：${shot.action || ''}\n景别/机位：${shot.shotSize || ''}\n出场设定：${shot.assets || ''}\n角色参考：${refs}\n\n请写英文生成提示词。`;
+    const ratio = opts.ratio || '9:16';
+    let user = `镜头：${shot.name || ''}\n画面：${shot.action || ''}\n景别/机位：${shot.shotSize || ''}\n运镜：${shot.movement || ''}\n时长：${shot.duration || 3}秒\n出场设定：${shot.assets || ''}\n角色参考：${refs}`;
+    if (opts.production === 'ai_generated') {
+      user += `\n生成模式：${shot.mode || 'text2video'}\n衔接尾帧：${shot.tailFrom || '无'}\n转场：${shot.transition || '硬切'}`;
+      if (shot.soundLayers && shot.soundLayers.length) {
+        user += '\n声音分层：' + shot.soundLayers.map(l => `${l.kind}${l.voiceId ? '[' + l.voiceId + ']' : ''}=${l.text}`).join('；');
+      }
+      user += `\n画幅：${ratio}\n\n请按四段式结构写英文生成提示词。`;
+      return ask(SYS_PROMPT_STRUCTURED, user, { onChunk, temperature: 0.6 });
+    }
+    user += `\n\n请写单行英文生成提示词（${ratio} vertical, 主体外貌, 动作, 场景光线, cinematic, 镜头语言）。`;
     return ask(SYS_PROMPT, user, { onChunk, temperature: 0.6 });
   }
 
@@ -1021,9 +1260,9 @@ const Bridge = (() => {
     return 'unknown';
   }
 
-  // 设定清单：人物/场景/道具
+  // 设定清单：人物/场景/道具/音色锚点
   function parseSetup(text) {
-    const out = { characters: [], scenes: [], props: [] };
+    const out = { characters: [], scenes: [], props: [], voiceAssets: [] };
     let section = null;
     text.split('\n').forEach(raw => {
       const line = raw.trim();
@@ -1031,6 +1270,7 @@ const Bridge = (() => {
       if (/^##\s*场景/.test(line)) { section = 'scenes'; return; }
       if (/^##\s*道具/.test(line)) { section = 'props'; return; }
       if (/^##\s*造型/.test(line)) { section = null; return; }
+      if (/^##\s*音色锚点/.test(line)) { section = 'voiceAssets'; return; }
       if (!section || !/^[-*]\s/.test(line)) return;
       const parts = splitLine(line);
       if (parts.length < 2) return;
@@ -1047,6 +1287,9 @@ const Bridge = (() => {
         });
       } else if (section === 'scenes') {
         out.scenes.push({ id: id.replace(/[^A-Za-z0-9_-]/g, ''), name, desc: desc || control, prompt: `${name}, ${desc}`.slice(0, 240) });
+      } else if (section === 'voiceAssets') {
+        const sample = (line.match(/样本[：:]\s*([^\n｜|]+)/) || [])[1] || '';
+        out.voiceAssets.push({ id: id.replace(/[^A-Za-z0-9_-]/g, ''), name, desc: desc || control, sample, voiceId: '' });
       } else {
         out.props.push({ id: id.replace(/[^A-Za-z0-9_-]/g, ''), name, desc: desc || control });
       }
@@ -1086,13 +1329,36 @@ const Bridge = (() => {
       const durMatch = (get('时长').match(/(\d+)/) || [])[1];
       const srcLine = get('来源');
       const srId = (srcLine.match(/EP\d+-SC\d+/) || [''])[0];
+      // AI 形态档可选字段（真人档缺这些字段也能解析，给默认值）
+      const modeRaw = get('生成模式');
+      const mode = /videoExtend2video/i.test(modeRaw) ? 'videoExtend2video'
+        : /mixed2video/i.test(modeRaw) ? 'mixed2video' : 'text2video';
+      const tailFrom = (get('衔接').match(/SHOT-?[\w-]+/i) || [''])[0].replace(/^SHOT-?/i, 'SHOT-');
+      const transition = get('转场') || '硬切';
+      const layered = get('声音分层');
+      const soundLayers = [];
+      if (layered) {
+        layered.split(/[｜|]/).map(s => s.trim()).filter(Boolean).forEach((part, idx) => {
+          const vm = part.match(/^([^：:]+)[：:]\s*(.*)$/);
+          const label = vm ? vm[1].trim() : '';
+          const text = (vm ? vm[2].trim() : part);
+          if (!text || text === '无') return;
+          // 音色 ID 可能写在标签里（旁白[VOICE-XXX]：台词），也可能写在文本里，两处都找
+          const voiceId = (part.match(/VOICE-[\w-]+/) || [''])[0];
+          const kind = /旁白|VO/i.test(label) ? 'vo' : /环境/i.test(label) ? 'ambience'
+            : /音效/i.test(label) ? 'sfx' : /音乐|配乐/i.test(label) ? 'bgm' : 'ambience';
+          soundLayers.push({ kind, text, voiceId, order: idx });
+        });
+      }
       shots.push({
         id: head.replace(/[^\w-]/g, ''), name, sceneId: srId || 'EP001-SC001',
         duration: parseInt(durMatch || '3', 10),
         purpose: get('目的'), shotSize: get('景别/机位') || get('景别') || '中景',
         camera: '', movement: get('运镜') || '固定',
         start: get('起点'), action: get('动作'), end: get('终点'),
-        assets: get('出场设定'), sound: get('声音'),
+        assets: get('出场设定'),
+        sound: get('声音') || soundLayers.map(l => l.text).join('；'),
+        mode, tailFrom: tailFrom || '', transition, soundLayers, segment: ''
       });
     }
     const total = shots.reduce((a, s) => a + s.duration, 0);
@@ -1116,7 +1382,7 @@ const Bridge = (() => {
       return {
         seconds: j.format?.target_seconds_per_episode || 90,
         ratio: j.format?.aspect_ratio || '9:16',
-        production: j.format?.production || 'live_action',
+        production: j.format?.production === 'ai_generated' ? 'ai_generated' : 'live_action',
       };
     } catch (e) { return { seconds: 90, ratio: '9:16', production: 'live_action' }; }
   }
@@ -1167,7 +1433,8 @@ const Bridge = (() => {
       p.script.targetSeconds = parsed.config.seconds;
       p.storyboard.targetSeconds = parsed.config.seconds;
       if (parsed.config.ratio) p.export.settings.ratio = parsed.config.ratio.includes('9:16') ? '9:16 竖屏' : parsed.config.ratio;
-      changes.push('目标时长/画幅');
+      if (parsed.config.production) p.production = parsed.config.production;  // 形态档开关
+      changes.push('目标时长/画幅/形态');
     }
     if (parsed.factText) { p.script.source = parsed.factText; changes.push('素材摘要'); }
     if (parsed.scriptScenes && parsed.scriptScenes.length) {
@@ -1179,6 +1446,7 @@ const Bridge = (() => {
       if (parsed.setup.characters.length) p.setup.characters = parsed.setup.characters;
       if (parsed.setup.scenes.length) p.setup.scenes = parsed.setup.scenes;
       if (parsed.setup.props.length) p.setup.props = parsed.setup.props;
+      if (parsed.setup.voiceAssets && parsed.setup.voiceAssets.length) p.setup.voiceAssets = parsed.setup.voiceAssets;
       changes.push('设定');
     }
     if (parsed.storyboard && parsed.storyboard.shots.length) {
@@ -1192,6 +1460,344 @@ const Bridge = (() => {
   }
 
   return { parseBundle, applyToProject, classify };
+})();
+
+</script>
+<script>
+/* ============================================================
+   猩猩导演台 · 分镜谱系（v2.4）
+   纯派生层：节点与连线全部从 script/setup/storyboard/generate/edit/assets
+   现算，绝不复制业务数据。用户只能改布局坐标，事实源仍是各分区。
+   ============================================================ */
+const Lineage = (() => {
+  const NODE_W = 186;
+  const NODE_H = 56;
+  const GAP_Y = 18;
+  const COLS = [
+    { k: 'asset', label: '资产 / 场景 / 剧本', x: 40, color: '#3ecfb0' },
+    { k: 'shot', label: '分镜', x: 300, color: '#9b7bff' },
+    { k: 'task', label: '生成任务', x: 560, color: '#ff9d3d' },
+    { k: 'output', label: '资产沉淀 / 成片时间线', x: 820, color: '#5aa9ff' }
+  ];
+  const KIND_META = {
+    character: ['◈', '人物', 'asset'], scene: ['▣', '场景', 'asset'], prop: ['✦', '道具', 'asset'],
+    voice: ['♪', '音色', 'asset'], script: ['✎', '剧本场景', 'asset'],
+    shot: ['▤', '镜头', 'shot'], task: ['⚙', '生成', 'task'], asset: ['◆', '资产', 'output'], clip: ['▶', '时间线', 'output']
+  };
+
+  function idSet(arr) {
+    const s = new Set();
+    (arr || []).forEach(x => s.add(x && x.id));
+    return s;
+  }
+
+  // 出场设定字段可能是 "CHAR-A,CHAR-B(右手),PROP-X"，提取其中的 ID
+  function refs(text, valid) {
+    return String(text || '').split(/[,，、]/).map(x => x.trim().replace(/[（(].*$/, '')).filter(x => x && valid.has(x));
+  }
+
+  function build(p) {
+    const result = { nodes: [], edges: [], issues: [], health: {} };
+    if (!p) return result;
+
+    // ---- 第一遍：只建节点，不建边 ----
+    const add = (id, kind, label, sub, view) => {
+      if (!id) return;
+      const meta = KIND_META[kind] || ['·', kind, 'asset'];
+      result.nodes.push({ id, kind, col: meta[2], ico: meta[0], kindLabel: meta[1], label, sub: sub || '', view });
+    };
+    (p.setup.characters || []).forEach(c => add(c.id, 'character', c.name, c.role || '人物三视图', 'setup'));
+    (p.setup.scenes || []).forEach(s => add(s.id, 'scene', s.name, '场景基准', 'setup'));
+    (p.setup.props || []).forEach(pr => add(pr.id, 'prop', pr.name, '道具 / 核心物证', 'setup'));
+    (p.setup.voiceAssets || []).forEach(v => add(v.id, 'voice', v.name, '音色锚点', 'setup'));
+    (p.script.scenes || []).forEach(s => add(s.id, 'script', s.location || s.id, '剧本场景', 'script'));
+    (p.storyboard.shots || []).forEach(s => add(s.id, 'shot', s.name || s.id, `${s.duration || 0}s · ${s.mode || 'text2video'}`, 'storyboard'));
+    (p.generate.tasks || []).forEach(t => add(t.id, 'task', t.name || t.id, `${t.model || '—'} · ${t.status || 'queued'}`, 'generate'));
+    (p.assets || []).forEach(a => add(a.id, 'asset', a.name, `${a.type || '—'} · ${a.from || ''}`, 'assets'));
+    (p.edit.clips || []).forEach((c, i) => add(c.id || `clip_${i}`, 'clip', c.name || `片段 ${i + 1}`, `${c.duration || 0}s · ${c.transition || '硬切'}`, 'edit'));
+
+    const valid = new Set(result.nodes.map(n => n.id));
+    const byId = new Map(result.nodes.map(n => [n.id, n]));
+    const issue = (level, node, text) => result.issues.push({ level, node, text });
+
+    // ---- 第二遍：连线与体检（LibTV 实测的 ORPHAN_MEDIA 教训固化在这里）----
+    const link = (from, to, label, kind) => {
+      if (!from || !to || !valid.has(from) || !valid.has(to) || from === to) return;
+      result.edges.push({ from, to, label: label || '', kind: kind || '' });
+    };
+    (p.storyboard.shots || []).forEach(s => {
+      link(s.sceneId, s.id, '场景', 'ref');
+      refs(s.assets, valid).forEach(ref => link(ref, s.id, '引用', 'ref'));
+      if (s.tailFrom) {
+        if (valid.has(s.tailFrom)) link(s.tailFrom, s.id, '尾帧', 'tail');
+        else issue('err', s.id, `镜头「${s.name || s.id}」的尾帧衔接指向不存在的 ${s.tailFrom}`);
+      }
+    });
+    (p.generate.tasks || []).forEach(t => {
+      if (t.shotId && valid.has(t.shotId)) link(t.shotId, t.id, '生成', 'gen');
+      else issue('err', t.id, `任务「${t.name || t.id}」引用了不存在的镜头 ${t.shotId || '（空）'}`);
+      (t.dependsOn || []).forEach(d => link(d, t.id, '依赖', 'tail'));
+    });
+    (p.assets || []).forEach(a => {
+      const m = String(a.from || '').match(/SHOT-[\w-]+/);
+      if (m && valid.has(m[0])) link(m[0], a.id, '沉淀', 'asset');
+    });
+    (p.edit.clips || []).forEach((c, i) => {
+      const cid = c.id || `clip_${i}`;
+      if (c.shotId && valid.has(c.shotId)) link(c.shotId, cid, '入时间线', 'clip');
+      else issue('warn', cid, `片段「${c.name || cid}」未关联镜头 — 它不会随镜头更新`);
+    });
+
+    const shots = p.storyboard.shots || [];
+    const tasks = p.generate.tasks || [];
+    const clips = p.edit.clips || [];
+    const withTask = shots.filter(s => tasks.some(t => t.shotId === s.id)).length;
+    const inTimeline = shots.filter(s => clips.some(c => c.shotId === s.id)).length;
+    shots.forEach(s => {
+      if (!tasks.some(t => t.shotId === s.id)) issue('info', s.id, `镜头「${s.name || s.id}」尚未进入生成队列`);
+      if (!clips.some(c => c.shotId === s.id)) issue('warn', s.id, `镜头「${s.name || s.id}」未进时间线 — 不会出现在成片里`);
+    });
+
+    result.health = {
+      shots: shots.length, withTask, inTimeline,
+      percent: shots.length ? Math.round(inTimeline / shots.length * 100) : 0,
+      edges: result.edges.length, nodes: result.nodes.length
+    };
+
+    // ---- 布局：已保存的坐标优先，否则按列自动排 ----
+    const saved = (p.lineage && p.lineage.layout) || {};
+    const counters = {};
+    const pos = {};
+    result.nodes.forEach(n => {
+      const s = saved[n.id];
+      if (s && Number.isFinite(s.x) && Number.isFinite(s.y)) pos[n.id] = { x: s.x, y: s.y };
+      else {
+        const i = counters[n.col] || 0;
+        counters[n.col] = i + 1;
+        const col = COLS.find(c => c.k === n.col) || COLS[0];
+        pos[n.id] = { x: col.x, y: 56 + i * (NODE_H + GAP_Y) };
+      }
+    });
+    result.pos = pos;
+    result.width = Math.max(1120, ...result.nodes.map(n => pos[n.id].x + NODE_W + 60));
+    result.height = Math.max(360, ...result.nodes.map(n => pos[n.id].y + NODE_H + 40));
+    result.hidden = (p.lineage && Array.isArray(p.lineage.hidden)) ? p.lineage.hidden : [];
+    return result;
+  }
+
+  function edgesSvg(data) {
+    return data.edges.map(e => {
+      const a = data.pos[e.from], b = data.pos[e.to];
+      if (!a || !b) return '';
+      if (data.hidden.includes(e.from) || data.hidden.includes(e.to)) return '';
+      const x1 = a.x + NODE_W, y1 = a.y + NODE_H / 2;
+      const x2 = b.x, y2 = b.y + NODE_H / 2;
+      const mx = x1 + Math.max(28, (x2 - x1) / 2);
+      const cls = e.kind === 'clip' ? 'clip' : e.kind === 'tail' ? 'tail' : e.kind === 'gen' ? 'gen' : '';
+      return `<path class="ln-edge ${cls}" d="M${x1} ${y1} C${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}" fill="none" marker-end="url(#lnArrow)"/>`;
+    }).join('');
+  }
+
+  function nodesSvg(data) {
+    return data.nodes.map(n => {
+      const q = data.pos[n.id];
+      if (data.hidden.includes(n.id)) return '';
+      const col = COLS.find(c => c.k === n.col) || COLS[0];
+      const bad = data.issues.some(i => i.node === n.id && i.level === 'warn');
+      return `<g class="ln-node ${n.kind} ${bad ? 'bad' : ''}" data-node="${n.id}" transform="translate(${q.x},${q.y})">
+        <rect width="${NODE_W}" height="${NODE_H}" rx="9" fill="#1d222d" stroke="${bad ? '#ffc94d' : col.color}" stroke-width="1"/>
+        <rect width="4" height="${NODE_H}" rx="2" fill="${col.color}"/>
+        <text class="ln-ico" x="16" y="22">${n.ico}</text>
+        <text class="ln-label" x="36" y="22">${String(n.label).slice(0, 15)}</text>
+        <text class="ln-sub" x="16" y="43">${String(n.sub).slice(0, 26)}</text>
+        <text class="ln-kind" x="${NODE_W - 10}" y="43" text-anchor="end">${n.kindLabel}</text>
+      </g>`;
+    }).join('');
+  }
+
+  return { build, edgesSvg, nodesSvg, COLS, NODE_W, NODE_H };
+})();
+
+</script>
+<script>
+/* ============================================================
+   猩猩导演台 · 电商带货反转短剧工作流（v2.4）
+   一键生成一个"从一开始就为成片设计"的完整项目：
+   每个镜头同时生成生成任务与剪辑片段，杜绝素材 orphan。
+   注意：本文件只产出结构化数据；真实图/视频由 Agent 或外部工具生成。
+   ============================================================ */
+const EcomWorkflow = (() => {
+  const TWISTS = {
+    misread: { label: '误解反转', hook: '先让观众以为产品没用 / 要翻车，再当场打脸' },
+    absurd: { label: '反常识开场', hook: '开场抛一个违反常识的结论，再逐步兑现' },
+    compare: { label: '对比反转', hook: '先展示贵的 / 复杂的失败方案，再用本产品轻松解决' }
+  };
+
+  const EL = (n) => 'SHOT-EC-' + String(n).padStart(3, '0');
+  const C = {
+    hero: 'CHAR-EC-HERO', guest: 'CHAR-EC-GUEST', product: 'PROP-EC-PRODUCT',
+    scene: 'LOC-EC-STUDIO', voice: 'VOICE-EC-HOST'
+  };
+
+  function prompt4(shot, o, characters) {
+    const refs = characters.map(c => c.name + '（三视图锁定）').join('、') || '达人';
+    const neg = '无水印、无多余手指、无变形产品、无乱码文字、无额外人物、不过度磨皮';
+    return `[声明] 9:16 竖屏，真人带货短剧质感，人物严格参考：${refs}；产品严格参考：${o.product} 基准图；镜头同时参考分镜图与尾帧。\n`
+      + `[分镜] ${shot.purpose} 景别：${shot.shotSize}，机位：${shot.camera}，运镜：${shot.movement}。起点：${shot.start} 动作：${shot.action} 终点：${shot.end}\n`
+      + `[声音] ${shot.sound || ''}\n`
+      + `[负面] ${neg}`;
+  }
+
+  function shot(i, name, dur, purpose, shotSize, camera, movement, start, action, end, sound, mode, tailFrom) {
+    return {
+      id: EL(i), name, duration: dur, sceneId: 'EC-SC-' + String(Math.min(3, Math.ceil(i / 3))).padStart(3, '0'),
+      purpose, shotSize, camera, movement, start, action, end,
+      assets: i <= 2 ? `${C.hero},${C.scene}` : `${C.hero},${C.product},${C.scene}`,
+      sound, mode: mode || 'text2video', tailFrom: tailFrom || '',
+      transition: i === 4 ? '推近' : i === 7 ? '淡出' : '硬切',
+      segment: i <= 3 ? 'SEG-EC-1' : 'SEG-EC-2',
+      soundLayers: [{ kind: 'dialogue', text: sound, voiceId: C.voice }]
+    };
+  }
+
+  function makeShots(o) {
+    const p = o.product, b = o.benefit, tw = TWISTS[o.twist] || TWISTS.misread;
+    const list = [
+      shot(1, '反常识钩子', 4, `用一句反常识的话抓住前 3 秒停留：${tw.hook}`,
+        '近景直视镜头', '正对镜头，浅景深', '轻微推',
+        '达人顶着没打理的头发直视镜头', `达人抬手制止：别急着洗，先看完这 4 秒`, '定格在认真表情',
+        `达人：别再乱折腾了，今天教你一招。`),
+      shot(2, '痛点具象', 4, '让目标人群一眼对号入座：把痛点拍成可见的身体细节',
+        '特写→中景', '顶光侧拍', '固定',
+        '发根扁塌贴头皮的特写', '同事从背后经过，达人下意识低头', '达人对镜苦笑',
+        `达人：${o.audience}最怕的不是油，是塌。`),
+      shot(3, '误导铺垫', 5, '故意让观众误判：以为又是一个没用的道具',
+        '中景', '桌面俯拍', '横移',
+        '达人把产品放在桌上，表情敷衍', '旁白式吐槽：这东西真能行？达人转身要走', '产品静静留在画面中央',
+        '达人（迟疑）：这个……能有用吗？', 'mixed2video', EL(2)),
+      shot(4, '反转兑现', 5, '反转核心：误判被当场推翻，效果必须肉眼可见',
+        '近景→特写', '正面平视', '快速推近',
+        '达人回头，拿起产品', `几下操作后发根立起，达人表情从怀疑变惊喜`, '定格在蓬松发根',
+        `达人：等等——${b}。`, 'mixed2video', EL(3)),
+      shot(5, '证据特写', 5, '给可验证证据：动作细节 + 前后对比，拒绝空口承诺',
+        '极特写', '柔光侧逆', '缓慢推',
+        '产品齿面与发根接触的极特写', '慢动作展示操作路径，画面分出使用前 / 使用后', '对比画面定格 0.5 秒',
+        '音效：轻柔摩擦声；画面文字：使用前 / 使用后', 'mixed2video', EL(4)),
+      shot(6, '社会认同', 4, '第三方反应替代自夸，提升可信度',
+        '双人中景', '过肩侧拍', '固定',
+        '另一位人物走近', `伸手摸了一下头发，点头露出惊讶表情`, '两人相视一笑',
+        `客人：哎？真的不一样。`, 'text2video', EL(5)),
+      shot(7, '行动指令', 3, '一句话 CTA：明确动作 + 记忆点，不堆卖点',
+        '产品特写+人物半身', '正面', '固定',
+        '产品与达人在同一画面', `达人举起产品：${p}，就这一下`, '品牌色背景收尾',
+        `达人：想试的，点开下方，今天这个价。`, 'text2video', EL(6))
+    ];
+    return list;
+  }
+
+  function create(o) {
+    o = o || {};
+    const opt = {
+      product: (o.product || '蓬松发梳').trim(),
+      benefit: (o.benefit || '摇两下头发就不油').trim(),
+      audience: (o.audience || '上班族').trim(),
+      twist: TWISTS[o.twist] ? o.twist : 'misread',
+      tone: (o.tone || '轻松幽默').trim(),
+      brandColor: /^#[0-9a-fA-F]{6}$/.test(o.brandColor || '') ? o.brandColor : '#ff6b35'
+    };
+    const t = Date.now();
+    const shots = makeShots(opt);
+    const characters = [
+      { id: C.hero, name: '达人', role: '主角 · 产品演示者', emoji: '🙂',
+        desc: `${opt.audience}形象，真实不端着，表情从怀疑到惊喜的转变要清楚。`,
+        traits: ['可辨识发型', '固定上衣颜色', '自然妆容'], views: { front: true, side: true, back: true },
+        prompt: `Chinese lifestyle host, ${opt.audience}, authentic expression, consistent hairstyle and top color across all shots, 3-view character sheet` },
+      { id: C.guest, name: '同事', role: '配角 · 第三方见证', emoji: '🧑‍💼',
+        desc: '路人同事，反应真实克制，用一个动作一个点头完成社会认同。',
+        traits: ['通勤着装', '短发'], views: { front: true, side: false, back: false },
+        prompt: 'Chinese office colleague, commuter outfit, short hair, genuine subtle surprised reaction' }
+    ];
+    const props = [
+      { id: C.product, name: opt.product, desc: `核心产品。所有镜头必须外观一致：${opt.benefit}。生成时以基准图为唯一参考，禁止形变。` },
+      { id: 'PROP-EC-CARD', name: '前后对比卡', desc: '第 5 镜证据画面使用，画面文字固定为「使用前 / 使用后」。' }
+    ];
+    const tasks = shots.map((s, i) => ({
+      id: 'gen_ec_' + (i + 1) + '_' + t.toString(36),
+      shotId: s.id, name: s.name, type: 'video', model: i === 5 ? '即梦' : 'Seedance',
+      status: 'queued', progress: 0, prompt: prompt4(s, opt, characters), createdAt: new Date(t).toISOString(),
+      mode: s.mode, tailFrom: s.tailFrom, dependsOn: s.tailFrom ? [s.tailFrom] : [], transition: s.transition
+    }));
+    const colors = ['#ff6b35', '#ff9d3d', '#9b7bff', '#5aa9ff', '#3ecfb0', '#ffc94d', '#ff8a5b'];
+    const clips = shots.map((s, i) => ({
+      id: 'clip_ec_' + (i + 1) + '_' + t.toString(36), shotId: s.id, name: s.name,
+      duration: s.duration, color: colors[i % colors.length], track: 'V1', transition: s.transition
+    }));
+    const scenes = [
+      { id: 'EC-SC-001', location: '达人近景位', time: '白天', content: '钩子、痛点与误导：固定机位，靠表演和景别制造误判。' },
+      { id: 'EC-SC-002', location: '产品操作位', time: '接前场', content: '反转与证据：必须锁产品外观，慢镜与对比卡承担说服力。' },
+      { id: 'EC-SC-003', location: '双人见证位', time: '接前场', content: '社会认同与 CTA：第三方反应 + 一句话行动指令。' }
+    ];
+
+    return {
+      id: 'proj_ec_' + t.toString(36),
+      name: `${opt.product} · 反转带货短剧`,
+      type: 'idea', emoji: '🛍️',
+      cover: `linear-gradient(135deg,${opt.brandColor},#1f2937)`,
+      createdAt: new Date(t).toISOString(), updatedAt: new Date(t).toISOString(),
+      production: 'ai_generated',
+      script: {
+        source: `产品：${opt.product}\n核心卖点：${opt.benefit}\n目标人群：${opt.audience}\n反转类型：${TWISTS[opt.twist].label}（${TWISTS[opt.twist].hook}）\n调性：${opt.tone}`,
+        title: `${opt.product} · 30 秒反转带货`,
+        targetSeconds: 30, estimatedSeconds: 30, voicedChars: 0, scenes
+      },
+      setup: {
+        characters,
+        scenes: [{ id: C.scene, name: '室内固定机位', desc: '干净背景，柔光，品牌色点缀；全片光向一致。', prompt: 'clean indoor studio, soft even light, subtle brand color accent, consistent lighting direction' }],
+        props,
+        voiceAssets: [{ id: C.voice, name: '达人音色', desc: `真实自然的${opt.tone}语气，前 3 秒语速略快，反转后放慢。`, sample: '8s 干净人声样本', voiceId: '' }]
+      },
+      storyboard: {
+        targetSeconds: 30, shots, fullTotal: 30, fullCount: shots.length,
+        segments: [
+          { id: 'SEG-EC-1', name: '片段一·钩子与误导', shotIds: shots.slice(0, 3).map(s => s.id) },
+          { id: 'SEG-EC-2', name: '片段二·反转与转化', shotIds: shots.slice(3).map(s => s.id) }
+        ]
+      },
+      generate: { tasks },
+      versions: [{ id: 'ver_ec_base', name: '结构版 v1', note: '七镜结构已锁定；生成任务与剪辑片段已预建，素材回填后即可出片。', time: new Date(t).toISOString(), snapshot: null }],
+      edit: {
+        audioTracks: [
+          { id: 'AUD-VO', name: '旁白/音色', kind: 'vo', items: shots.map(s => ({ id: 'aud_' + s.id, name: s.name, voiceId: C.voice, text: s.sound, duration: s.duration, source: s.id })) },
+          { id: 'AUD-BGM', name: '配乐', kind: 'bgm', items: [{ id: 'aud_bgm_ec', name: '轻快节奏 · 前疏后密', voiceId: '', text: '', duration: 30, source: '音效库' }] },
+          { id: 'AUD-SFX', name: '音效', kind: 'sfx', items: [{ id: 'aud_sfx_ec', name: '第 5 镜摩擦声 + 反转提示音', voiceId: '', text: '', duration: 5, source: '音效库' }] }
+        ],
+        clips, subtitles: true, bgm: '轻快节奏 · 前疏后密'
+      },
+      export: {
+        settings: { resolution: '1080×1920', fps: '30', format: 'MP4', bitrate: '高', ratio: '9:16 竖屏' },
+        pipeline: { removeSubtitle: true, compose: true, upscale: false, upscaleTo: '1080P' }, records: []
+      },
+      assets: [
+        { id: 'as_ec_hero', type: 'image', name: '达人 · 三视图基准', emoji: '🙂', from: '设定中枢', time: new Date(t).toISOString(), shotId: '' },
+        { id: 'as_ec_product', type: 'image', name: `${opt.product} · 基准图`, emoji: '🛍️', from: '设定中枢', time: new Date(t).toISOString(), shotId: '' }
+      ],
+      lineage: { layout: {}, hidden: [] },
+      ecom: {
+        template: 'ecom-reversal-v1', createdAt: new Date(t).toISOString(),
+        product: opt.product, benefit: opt.benefit, audience: opt.audience, twist: opt.twist, tone: opt.tone, brandColor: opt.brandColor,
+        gates: [
+          { id: 'G1', text: '前 3 秒钩子已写明反常识结论', done: true },
+          { id: 'G2', text: '达人 / 产品基准图已锁定（三视图 + 外观一致）', done: false },
+          { id: 'G3', text: '七镜全部有生成任务与剪辑片段', done: true },
+          { id: 'G4', text: '第 5 镜证据可验证（前后对比可见）', done: true },
+          { id: 'G5', text: '素材已回填到 素材/<镜号>.mp4', done: false },
+          { id: 'G6', text: '本地出片脚本已合成 MP4 并抽帧审片', done: false }
+        ]
+      }
+    };
+  }
+
+  return { create, TWISTS, C };
 })();
 
 </script>
@@ -1215,12 +1821,13 @@ const Bridge = (() => {
   const VIEW_TITLE = {
     projects: ['项目台', '所有创作项目的总览。每个项目是一条从文字到成片的完整流水线。'],
     script: ['剧本工坊', '从文字素材到结构化剧本。输入小说片段、新闻或一句话，生成带场景编号的剧本正本。'],
-    setup: ['设定中枢', '人物三视图、场景与道具的稳定设定，供分镜与生成引用，保证跨镜一致性。'],
-    storyboard: ['分镜台', '把剧本切成逐镜画面，标注时长、景别、运镜与声音，并汇总整集时长。'],
-    generate: ['生成工场', '按镜生成图片与视频的任务队列看板。原型中用模拟进度演示状态流转。'],
-    edit: ['剪辑台', '时间线剪辑：片段排序、转场、字幕与配乐，所见即所得地拼成成片。'],
-    export: ['导出中心', '设置分辨率、帧率与格式，生成成片并留存导出记录。'],
-    assets: ['资产库', '全流程沉淀的可复用资产：角色图、场景图、视频片段与音频。']
+    setup: ['设定中枢', '人物三视图、音色锚点、场景与道具的稳定设定，供分镜与生成引用，保证跨镜一致性。'],
+    storyboard: ['分镜台', '按形态档切镜：真人快切或 AI 长镜溶接；标注模式、尾帧衔接、声音分层并汇总时长。'],
+    generate: ['生成工场', '按镜生成的任务看板，支持 text2video / mixed2video / videoExtend2video 接力与尾帧衔接。'],
+    edit: ['剪辑台', '时间线剪辑：片段排序、转场、字幕，以及旁白/配乐/音效三条独立音轨。'],
+    export: ['导出中心', '设置分辨率帧率，执行去字幕→合成→放大后期工序，留存导出记录。'],
+    assets: ['资产库', '全流程沉淀的可复用资产：角色图、场景图、视频片段与音频。'],
+    lineage: ['谱系视图', '从现有数据自动生成的资产→分镜→生成→成片关系图。节点只表达引用，拖动只改布局，不产生第二份数据。']
   };
 
   // ============ 初始化 ============
@@ -1310,7 +1917,7 @@ const Bridge = (() => {
     const map = {
       projects: viewProjects, script: viewScript, setup: viewSetup,
       storyboard: viewStoryboard, generate: viewGenerate, edit: viewEdit,
-      export: viewExport, assets: viewAssets
+      export: viewExport, assets: viewAssets, lineage: viewLineage
     };
     ws.innerHTML = (map[currentView] || viewProjects)();
     ws.scrollTop = 0;
@@ -1393,7 +2000,8 @@ const Bridge = (() => {
     </div>`;
     html += `<div class="card card-pad" style="margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
       <button class="btn btn-primary" data-act="new-project">＋ 新建项目</button>
-      <span style="color:var(--txt-3);font-size:11px">或从小说 / 新闻热点 / 一句话创意起步</span></div>`;
+      <button class="btn btn-outline ecom-cta" data-act="new-ecom">⚡ 一键生成电商带货工作流</button>
+      <span style="color:var(--txt-3);font-size:11px">或从小说 / 新闻热点 / 一句话创意起步 · 电商模板预建七镜 + 生成任务 + 时间线，结构即可出片</span></div>`;
 
     if (!db.projects.length) {
       html += `<div class="empty"><div class="e-ico">▦</div><div class="e-title">项目台是空的</div>
@@ -1465,6 +2073,11 @@ const Bridge = (() => {
             <div class="field"><label>集名</label><input class="input" id="scriptTitle" value="${esc(p.script.title)}"></div>
             <div class="field"><label>目标时长（秒）</label><input class="input" type="number" id="targetSec" value="${p.script.targetSeconds}"></div>
           </div>
+          <div class="field"><label>形态档（决定节奏尺子：真人快切 / AI 长镜溶接）</label>
+            <select class="select" id="productionSel">
+              <option value="live_action" ${p.production !== 'ai_generated' ? 'selected' : ''}>真人短剧 · 快切尺子（约2.5s/镜）</option>
+              <option value="ai_generated" ${p.production === 'ai_generated' ? 'selected' : ''}>AI 生成片 · 长镜溶接（8-15s/镜）</option>
+            </select></div>
           <button class="btn btn-ghost btn-sm" data-act="save-script-meta">保存参数</button>
         </div>
       </div>
@@ -1498,7 +2111,8 @@ const Bridge = (() => {
   // ============ ③ 设定中枢 ============
   function viewSetup() {
     const p = Store.activeProject(); if (!p) return noProject();
-    const actions = `<button class="btn btn-ghost btn-sm" data-act="add-scene-set">＋ 场景</button>
+    const actions = `<button class="btn btn-ghost btn-sm" data-act="add-voice">＋ 音色</button>
+      <button class="btn btn-ghost btn-sm" data-act="add-scene-set">＋ 场景</button>
       <button class="btn btn-ghost btn-sm" data-act="add-prop">＋ 道具</button>
       <button class="btn btn-primary btn-sm" data-act="add-char">＋ 人物</button>`;
     let html = headHtml('setup', actions);
@@ -1539,6 +2153,14 @@ const Bridge = (() => {
         <div style="font-size:11.5px;color:var(--txt-2);line-height:1.6">${esc(s.desc)}</div>
         <div class="prompt-box" style="margin-top:10px;margin-bottom:0">${esc(s.prompt)}</div></div>`).join('') || '<div class="mini-note">暂无场景</div>'}</div>`;
 
+    html += `<div class="card-head" style="background:transparent;border:none;padding:0 0 12px"><h3>音色锚点</h3><span class="sub">${(p.setup.voiceAssets || []).length} 个 · 旁白/角色音色一致性引用（AI 生成片用）</span></div>`;
+    html += `<div class="grid g-3" style="margin-bottom:26px">${(p.setup.voiceAssets || []).map((v, i) => `
+      <div class="card card-pad"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:18px">🎙️</span><b style="flex:1">${esc(v.name)}</b>
+        <button class="btn btn-xs btn-danger" data-act="del-voice" data-i="${i}">删</button></div>
+        <div style="font-size:11.5px;color:var(--txt-2);line-height:1.6">${esc(v.desc)}</div>
+        <div style="margin-top:8px"><span class="code-hint">${esc(v.id)}</span> ${v.sample ? '<span class="sub" style="margin-left:6px">' + esc(v.sample) + '</span>' : ''}</div></div>`).join('') || '<div class="mini-note">暂无音色锚点（真人短剧可不建）</div>'}</div>`;
+
     html += `<div class="card-head" style="background:transparent;border:none;padding:0 0 12px"><h3>道具</h3><span class="sub">${p.setup.props.length} 件 · 核心物证优先登记</span></div>`;
     html += `<div class="grid g-3">${p.setup.props.map((pr, i) => `
       <div class="card card-pad"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
@@ -1563,6 +2185,7 @@ const Bridge = (() => {
       <div class="sum-item"><span class="si-lab">目标集长</span><span class="si-val">${p.storyboard.targetSeconds}s</span></div>
       <div class="sum-item"><span class="si-lab">差值</span><span class="si-val" style="color:${Math.abs(sum - p.storyboard.targetSeconds) > 20 ? 'var(--warn)' : 'var(--ok)'}">${sum - p.storyboard.targetSeconds >= 0 ? '+' : ''}${sum - p.storyboard.targetSeconds}s</span></div>
       <div class="sum-item"><span class="si-lab">平均镜长</span><span class="si-val">${shots.length ? (sum / shots.length).toFixed(1) : 0}s</span></div>
+      <div class="sum-item"><span class="si-lab">形态尺子</span><span class="si-val" style="font-size:11px">${p.production === 'ai_generated' ? 'AI 长镜' : '真人快切'}</span></div>
       <div style="margin-left:auto;font-size:10.5px;color:var(--txt-3);max-width:230px;line-height:1.5">估时是报告不是裁决：差值交创作者定夺，不擅自改语速硬凑。</div>
     </div>`;
     if (!shots.length) {
@@ -1582,10 +2205,15 @@ const Bridge = (() => {
             <button class="btn btn-xs btn-ghost" data-act="edit-shot" data-i="${i}">编辑</button>
             <button class="btn btn-xs btn-outline" data-act="shot-to-gen" data-i="${i}">✦ 生成</button>
             <button class="btn btn-xs btn-danger" data-act="del-shot" data-i="${i}">删</button></div>
-          <div class="shot-tagline"><span class="tag">${esc(s.shotSize)}</span><span class="tag violet">${esc(s.movement)}</span><span class="tag ok">${esc(s.camera)}</span></div>
+          <div class="shot-tagline"><span class="tag">${esc(s.shotSize)}</span><span class="tag violet">${esc(s.movement)}</span><span class="tag ok">${esc(s.camera)}</span>
+            ${s.mode ? `<span class="tag blue" title="生成模式">${esc(s.mode)}</span>` : ''}
+            ${s.transition && s.transition !== '硬切' ? `<span class="tag" title="转场">⇢ ${esc(s.transition)}</span>` : ''}
+            ${s.tailFrom ? `<span class="tag" title="尾帧衔接">↳ ${esc(s.tailFrom.replace('SHOT-', ''))}</span>` : ''}</div>
           <div class="shot-grid">
             <div class="shot-field"><span class="sf-k">目的</span><span class="sf-v">${esc(s.purpose)}</span></div>
-            <div class="shot-field"><span class="sf-k">声音</span><span class="sf-v">${esc(s.sound)}</span></div>
+            <div class="shot-field"><span class="sf-k">声音</span><span class="sf-v">${s.soundLayers && s.soundLayers.length
+              ? s.soundLayers.map(l => `<b>${esc(l.kind === 'vo' ? '旁白' : l.kind === 'ambience' ? '环境' : l.kind === 'sfx' ? '音效' : '配乐')}</b>：${esc(l.text)}${l.voiceId ? ' <span class="code-hint">[' + esc(l.voiceId) + ']</span>' : ''}`).join('<br>')
+              : esc(s.sound)}</span></div>
             <div class="shot-field"><span class="sf-k">画面</span><span class="sf-v">起点：${esc(s.start)}<br>动作：${esc(s.action)}<br>终点：${esc(s.end)}</span></div>
             <div class="shot-field"><span class="sf-k">出场设定</span><span class="sf-v"><span class="code-hint">${esc(s.assets)}</span></span></div>
           </div>
@@ -1616,7 +2244,7 @@ const Bridge = (() => {
         html += `<div class="gen-card"><div class="gen-card-top">
           <div class="gen-thumb">${typeIco}</div>
           <div style="flex:1;min-width:0"><div class="gen-name">${esc(t.name)}</div>
-            <div class="gen-sub">${esc(t.model)} · ${t.type === 'video' ? '视频' : '图片'} · ${esc(t.shotId.replace('SHOT-', ''))}</div></div>
+            <div class="gen-sub">${esc(t.model)} · ${t.type === 'video' ? '视频' : '图片'} · ${esc(t.shotId.replace('SHOT-', ''))}${t.mode && t.mode !== 'text2video' ? ' · ' + esc(t.mode) : ''}${t.tailFrom ? ' ↳' + esc(t.tailFrom.replace('SHOT-', '')) : ''}</div></div>
           <span class="tag ${t.status === 'done' ? 'ok' : t.status === 'running' ? 'warn' : ''}" style="font-size:9px">${t.status === 'done' ? '完成' : t.status === 'running' ? t.progress + '%' : '排队'}</span>
         </div>
         <div class="gen-prompt">${esc(t.prompt)}</div>
@@ -1656,8 +2284,14 @@ const Bridge = (() => {
                 <div style="position:absolute;left:0;top:0;bottom:0;width:5px;background:rgba(255,255,255,.3)"></div>
                 <div class="tc-name">${esc(c.name)}</div><div class="tc-dur">${c.duration}s · ${esc(c.transition)}</div>
               </div>`).join('') || '<div class="mini-note">时间线为空</div>'}</div></div>
-          <div class="tl-track"><div class="tl-label"><span class="tl-ico">🔊</span>音频 A1</div>
-            <div class="tl-clips"><div class="tl-clip" style="background:#2d3543;flex:1"><div class="tc-name">${esc(p.edit.bgm || '暂无配乐')}</div></div></div></div>
+          ${(p.edit.audioTracks || []).map(tr => {
+            const col = tr.kind === 'vo' ? '#9b7bff' : tr.kind === 'bgm' ? '#3ecfb0' : '#5aa9ff';
+            const ico = tr.kind === 'vo' ? '🎙️' : tr.kind === 'bgm' ? '🎵' : '💥';
+            return `<div class="tl-track"><div class="tl-label"><span class="tl-ico">${ico}</span>${esc(tr.name)}</div>
+              <div class="tl-clips">${tr.items.length
+                ? tr.items.map(it => `<div class="tl-clip" style="background:${col};flex:1" title="${esc(it.text || it.name)}"><div class="tc-name">${esc(it.name)}${it.voiceId ? ' · ' + esc(it.voiceId) : ''}</div></div>`).join('')
+                : '<div class="tl-clip" style="background:#2d3543;flex:1"><div class="tc-name">空轨</div></div>'}</div></div>`;
+          }).join('')}
           <div class="tl-track"><div class="tl-label"><span class="tl-ico">💬</span>字幕</div>
             <div class="tl-clips"><div class="tl-clip" style="background:#2d3543;flex:1"><div class="tc-name">${p.edit.subtitles ? '字幕已开启' : '字幕已关闭'}</div></div></div></div>
         </div>
@@ -1710,8 +2344,17 @@ const Bridge = (() => {
         </div>
         <div class="field"><label>码率</label><select class="select" id="exBitrate">
           ${['高', '中', '低'].map(x => `<option ${s.bitrate === x ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
-        <button class="btn btn-primary" data-act="do-export" style="width:100%;margin-top:6px">⇩ 生成成片</button>
-        <div class="mini-note">原型中「生成成片」会写入一条导出记录；真实文件渲染需接入视频生成与合成服务。</div>
+        <div class="card-head" style="padding:16px 0 10px"><h3>后期工序</h3><span class="sub" style="margin-left:auto">对标成片三件套</span></div>
+        ${(() => {
+          const pl = p.export.pipeline || { removeSubtitle: true, compose: true, upscale: false, upscaleTo: '2K' };
+          const step = (key, label, extra = '') => `<label class="pipe-step-check" style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px;cursor:pointer">
+            <input type="checkbox" data-act="pipeline-toggle" data-key="${key}" ${pl[key] ? 'checked' : ''}> <span>${label}</span>${extra}</label>`;
+          return step('removeSubtitle', '① 去字幕（去 AI 水印）')
+            + step('compose', '② 合成（拼接分段）')
+            + step('upscale', '③ 高清放大', `<select class="select" data-act="pipeline-upscale" style="width:auto;padding:3px 20px 3px 6px;font-size:11px"><option ${pl.upscaleTo === '2K' ? 'selected' : ''}>2K</option><option ${pl.upscaleTo === '1080P' ? 'selected' : ''}>1080P</option><option ${pl.upscaleTo === '4K' ? 'selected' : ''}>4K</option></select>`);
+        })()}
+        <button class="btn btn-primary" data-act="do-export" style="width:100%;margin-top:12px">⇩ 生成成片</button>
+        <div class="mini-note">${p.ecom ? '电商工作流：真实 MP4 由本地脚本合成，步骤见右侧「真实出片操作」。此按钮只登记导出记录。' : '原型中「生成成片」会写入一条导出记录；真实文件渲染需接入视频生成与合成服务。'}</div>
       </div>
       <div>
         <div class="card card-pad">
@@ -1726,6 +2369,16 @@ const Bridge = (() => {
               <div class="exp-rec-meta">${esc(r.settings)} · ${r.size || '—'} · ${Store.fmtTime(r.time)}</div></div>
             <span class="tag ok">完成</span>
             <button class="btn btn-xs btn-danger" data-act="del-export" data-id="${r.id}">删</button></div>`).join('') || '<div class="mini-note">暂无导出记录</div>'}
+        ${p.ecom ? `<div class="card card-pad" style="margin-top:14px">
+          <div class="card-head" style="padding:0 0 10px"><h3>真实出片操作</h3><span class="sub" style="margin-left:auto">不依赖网页渲染</span></div>
+          <div class="ecom-steps">
+            <div><b>1</b> 谱系视图或此处下载「出片包 JSON」</div>
+            <div><b>2</b> 7 个镜头素材放到 <code>素材/SHOT-EC-001.mp4</code> … <code>007.mp4</code></div>
+            <div><b>3</b> 运行 <code>node tools/出片.js 出片包.json</code></div>
+            <div><b>4</b> 脚本自动按时间线拼接、烧字幕、输出 MP4，缺素材会逐个点名</div>
+          </div>
+          <button class="btn btn-outline btn-sm" data-act="ln-export" style="margin-top:10px;width:100%">下载出片包 JSON</button>
+        </div>` : ''}
       </div>
     </div>`;
     return html;
@@ -1757,10 +2410,106 @@ const Bridge = (() => {
     return html;
   }
 
+  // ============ ⑨ 谱系视图（v2.4） ============
+  // 节点从现有数据派生；拖动只写 lineage.layout，业务数据零复制。
+  function viewLineage() {
+    const p = Store.activeProject(); if (!p) return noProject();
+    const d = Lineage.build(p);
+    const actions = `<button class="btn btn-ghost btn-sm" data-act="ln-reset">重排布局</button>
+      <button class="btn btn-outline btn-sm" data-act="ln-export">下载出片包 JSON</button>`;
+    let html = headHtml('lineage', actions);
+    const h = d.health;
+    const healthColor = h.percent === 100 && h.shots ? 'var(--ok)' : h.percent >= 50 ? 'var(--warn)' : 'var(--err)';
+    html += `<div class="summary-bar">
+      <div class="sum-item"><span class="si-lab">派生节点</span><span class="si-val brand">${h.nodes}</span></div>
+      <div class="sum-item"><span class="si-lab">引用连线</span><span class="si-val">${h.edges}</span></div>
+      <div class="sum-item"><span class="si-lab">镜头总数</span><span class="si-val">${h.shots}</span></div>
+      <div class="sum-item"><span class="si-lab">已进生成</span><span class="si-val">${h.withTask}</span></div>
+      <div class="sum-item"><span class="si-lab">已进时间线</span><span class="si-val">${h.inTimeline}</span></div>
+      <div class="sum-item"><span class="si-lab">成片覆盖率</span><span class="si-val" style="color:${healthColor}">${h.percent}%</span></div>
+      <div class="sum-item"><span class="si-lab">体检问题</span><span class="si-val" style="color:${d.issues.length ? 'var(--warn)' : 'var(--ok)'}">${d.issues.length}</span></div>
+    </div>`;
+    html += `<div class="lineage-layout">
+      <div class="lineage-canvas-wrap">
+        <div class="ln-hint">拖动节点只改布局坐标；点击节点跳转到对应工位。所有节点由现有数据实时派生。</div>
+        <div class="lineage-scroll"><svg id="lnSvg" class="lineage-svg" viewBox="0 0 ${d.width} ${d.height}" width="${d.width}" height="${d.height}">
+          <defs><marker id="lnArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M1 1L9 5L1 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+          ${Lineage.COLS.map(c => `<text class="ln-col" x="${c.x}" y="28" fill="${c.color}">${c.label}</text>`).join('')}
+          <g id="lnEdges">${Lineage.edgesSvg(d)}</g>
+          <g id="lnNodes">${Lineage.nodesSvg(d)}</g>
+        </svg></div>
+      </div>
+      <div class="lineage-side">
+        <div class="card card-pad">
+          <div class="card-head" style="padding:0 0 12px"><h3>成片体检</h3><span class="sub" style="margin-left:auto">${d.issues.length} 项</span></div>
+          ${d.issues.length ? d.issues.slice(0, 14).map(it => `
+            <div class="ln-issue ${it.level}" data-act="ln-issue" data-node="${esc(it.node)}">
+              <span class="ln-issue-mark">${it.level === 'err' ? '⛔' : it.level === 'warn' ? '⚠' : '·'}</span>
+              <span>${esc(it.text)}</span></div>`).join('')
+            + (d.issues.length > 14 ? `<div class="mini-note">另有 ${d.issues.length - 14} 项未显示</div>` : '')
+            : '<div class="mini-note">✓ 全部镜头都有生成任务，且都已进入时间线。</div>'}
+          <div class="mini-note" style="margin-top:12px">这张图只回答一个问题：<b>素材有没有走进成片</b>。它不替代分镜台、生成工场或剪辑台。</div>
+        </div>
+        ${p.ecom ? `<div class="card card-pad" style="margin-top:14px">
+          <div class="card-head" style="padding:0 0 12px"><h3>电商工作流门槛</h3></div>
+          ${p.ecom.gates.map(g => `<div class="ln-gate ${g.done ? 'done' : ''}" data-act="ln-gate" data-id="${esc(g.id)}">
+            <span>${g.done ? '✓' : '○'}</span><span>${esc(g.text)}</span></div>`).join('')}
+          <div class="mini-note" style="margin-top:10px">点击可切换完成状态。G5 / G6 需要真实素材与出片脚本，网页本身不生成视频。</div>
+        </div>` : ''}
+      </div>
+    </div>`;
+    return html;
+  }
+
+  function bindLineageDrag() {
+    const svg = $('#lnSvg'); if (!svg) return;
+    const p = Store.activeProject(); if (!p) return;
+    const d = Lineage.build(p);
+    const pos = d.pos;
+    let drag = null;
+    const point = e => {
+      const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+      const m = svg.getScreenCTM(); if (!m) return { x: 0, y: 0 };
+      const r = pt.matrixTransform(m.inverse()); return { x: r.x, y: r.y };
+    };
+    svg.addEventListener('pointerdown', e => {
+      const g = e.target.closest('[data-node]'); if (!g) return;
+      e.preventDefault();
+      const id = g.dataset.node, q = pos[id]; if (!q) return;
+      const pt = point(e);
+      drag = { id, g, ox: pt.x - q.x, oy: pt.y - q.y, moved: false };
+      try { g.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    svg.addEventListener('pointermove', e => {
+      if (!drag) return;
+      const pt = point(e);
+      const x = Math.max(8, Math.round(pt.x - drag.ox)), y = Math.max(8, Math.round(pt.y - drag.oy));
+      pos[drag.id] = { x, y };
+      drag.g.setAttribute('transform', `translate(${x},${y})`);
+      const eg = $('#lnEdges'); if (eg) eg.innerHTML = Lineage.edgesSvg({ ...d, pos });
+      drag.moved = true;
+    });
+    const finish = () => {
+      if (!drag) return;
+      if (drag.moved) {
+        Store.saveLineageLayout(p.id, pos, d.hidden);
+        toast('布局已保存（仅坐标，业务数据未改动）', 'ok');
+      } else {
+        const node = d.nodes.find(n => n.id === drag.id);
+        if (node && VIEW_TITLE[node.view]) { currentView = node.view; render(); }
+      }
+      drag = null;
+    };
+    svg.addEventListener('pointerup', finish);
+    svg.addEventListener('pointercancel', finish);
+  }
+
   // ============ 视图事件绑定（统一委托） ============
   function bindViewEvents() {
     $('#workspace').onclick = handleClick;
     $('#workspace').onchange = handleChange;
+    if (currentView === 'lineage') bindLineageDrag();
   }
 
   function handleChange(e) {
@@ -1770,6 +2519,17 @@ const Bridge = (() => {
     if (map[e.target.id]) {
       p.export.settings[map[e.target.id]] = e.target.value.replace(' fps', '');
       scheduleSave();
+      return;
+    }
+    // 后期工序勾选 / 放大档位
+    const t = e.target;
+    if (t.dataset && t.dataset.act === 'pipeline-toggle') {
+      Store.updatePipeline(p.id, { [t.dataset.key]: t.checked });
+      scheduleSave(); toast('后期工序已更新', 'ok'); return;
+    }
+    if (t.dataset && t.dataset.act === 'pipeline-upscale') {
+      Store.updatePipeline(p.id, { upscale: true, upscaleTo: t.value });
+      scheduleSave(); toast('放大档位：' + t.value, 'ok'); return;
     }
   }
 
@@ -1784,6 +2544,7 @@ const Bridge = (() => {
     if (act === 'goto-view') { const v = el.dataset.view; if (v) { currentView = v; render(); } return; }
     if (act === 'goto-projects') { currentView = 'projects'; render(); return; }
     if (act === 'new-project') { return modalNewProject(); }
+    if (act === 'new-ecom') { return modalEcom(); }
     if (act === 'edit-project') { return modalEditProject(el.dataset.id); }
     if (act === 'del-project') { return modalDelProject(el.dataset.id); }
     if (act === 'switch-project' || act === 'open-project') {
@@ -1807,7 +2568,14 @@ const Bridge = (() => {
       return aiGenerate('script', p, src);
     }
     if (act === 'bridge-import') { return modalBridge(p); }
-    if (act === 'save-script-meta') { p.script.title = $('#scriptTitle').value; p.script.targetSeconds = +$('#targetSec').value || 90; p.storyboard.targetSeconds = p.script.targetSeconds; scheduleSave(); toast('参数已保存', 'ok'); return; }
+    if (act === 'save-script-meta') {
+      p.script.title = $('#scriptTitle').value;
+      p.script.targetSeconds = +$('#targetSec').value || 90;
+      p.storyboard.targetSeconds = p.script.targetSeconds;
+      const prodSel = $('#productionSel');
+      if (prodSel) { p.production = prodSel.value; Store.updateProject(p.id, { production: p.production }); }
+      scheduleSave(); toast('参数已保存' + (prodSel ? '（形态：' + (p.production === 'ai_generated' ? 'AI 长镜' : '真人快切') + '）' : ''), 'ok'); return;
+    }
     if (act === 'import-script') { return modalImport('剧本', txt => importScript(p, txt)); }
     if (act === 'add-scene') { return modalScene(p, null, i); }
     if (act === 'edit-scene') { return modalScene(p, i, i); }
@@ -1827,6 +2595,8 @@ const Bridge = (() => {
     if (act === 'del-scene-set') { p.setup.scenes.splice(i, 1); scheduleSave(); render(); return; }
     if (act === 'add-prop') { return modalProp(p); }
     if (act === 'del-prop') { p.setup.props.splice(i, 1); scheduleSave(); render(); return; }
+    if (act === 'add-voice') { return modalVoice(p); }
+    if (act === 'del-voice') { p.setup.voiceAssets.splice(i, 1); scheduleSave(); render(); return; }
 
     // 分镜台
     if (act === 'add-shot') { return modalShot(p, null); }
@@ -1839,7 +2609,8 @@ const Bridge = (() => {
     }
     if (act === 'shot-to-gen') {
       const s = p.storyboard.shots[i];
-      p.generate.tasks.unshift({ id: Store.uid('gen'), shotId: s.id, name: s.name, type: 'video', model: 'Seedance', status: 'queued', progress: 0, prompt: s.action, createdAt: Store.now() });
+      p.generate.tasks.unshift({ id: Store.uid('gen'), shotId: s.id, name: s.name, type: 'video', model: 'Seedance', status: 'queued', progress: 0, prompt: s.action, createdAt: Store.now(),
+        mode: s.mode || 'text2video', tailFrom: s.tailFrom || '', dependsOn: s.tailFrom ? [s.tailFrom] : [], transition: s.transition || '硬切' });
       scheduleSave(); toast('已加入生成工场队列（提示词可点「AI 优化」重写）', 'ok'); render(); return;
     }
     if (act === 'ai-prompt') {
@@ -1886,6 +2657,30 @@ const Bridge = (() => {
 
     // 资产库
     if (act === 'asset-tab') { assetTab = el.dataset.tab; render(); return; }
+
+    // 谱系视图（v2.4）
+    if (act === 'ln-reset') { Store.resetLineageLayout(p.id); render(); toast('已恢复自动布局', 'ok'); return; }
+    if (act === 'ln-export') {
+      const json = Store.exportProject(p.id);
+      if (!json) { toast('导出失败', 'err'); return; }
+      const blob = new Blob([json], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '出片包_' + (p.script.title || p.name).replace(/[\\/:*?"<>|]/g, '_') + '.json';
+      a.click(); URL.revokeObjectURL(a.href);
+      toast('已下载出片包；素材放 素材/<镜号>.mp4 后运行 tools/出片.js', 'ok'); return;
+    }
+    if (act === 'ln-issue' || act === 'ln-gate') {
+      if (act === 'ln-gate' && p.ecom) {
+        const g = (p.ecom.gates || []).find(x => x.id === el.dataset.id);
+        if (g) { g.done = !g.done; scheduleSave(); render(); toast('门槛状态已更新', 'ok'); }
+        return;
+      }
+      const d = Lineage.build(p);
+      const node = d.nodes.find(n => n.id === el.dataset.node);
+      if (node && VIEW_TITLE[node.view]) { currentView = node.view; render(); }
+      return;
+    }
   }
 
   // ============ 播放器模拟 ============
@@ -1933,6 +2728,37 @@ const Bridge = (() => {
       if (!name) { toast('请填写项目名称', 'err'); return; }
       Store.addProject(name, $('#mType').value);
       closeModal(); refresh(); render(); toast('项目已创建', 'ok');
+    };
+  }
+
+  // v2.4 电商带货工作流：一次填完，直接生成可出片的完整项目
+  function modalEcom() {
+    if (typeof EcomWorkflow === 'undefined') { toast('工作流模块未加载，请刷新页面', 'err'); return; }
+    openModal('一键生成 · 电商带货反转短剧', `
+      <div class="ecom-form-note">30 秒 / 9:16 / 7 镜。模板会同时建立角色资产、分镜、生成任务和剪辑片段——每个镜头都已在时间线上，不会出现"生成了一堆素材却拼不成片"。</div>
+      <div class="field"><label>产品名</label><input class="input" id="mEproduct" placeholder="例如：蓬松发梳" value="蓬松发梳"></div>
+      <div class="field"><label>核心卖点（一句话，要能被画面证明）</label><input class="input" id="mEbenefit" placeholder="例如：摇两下头发就不油" value="摇两下头发就不油"></div>
+      <div class="field"><label>目标人群</label><input class="input" id="mEaudience" placeholder="例如：上班族 / 宝妈 / 通勤族" value="上班族"></div>
+      <div class="field"><label>反转类型</label><select class="select" id="mEtwist">
+        ${Object.entries(EcomWorkflow.TWISTS).map(([k, v]) => `<option value="${k}">${v.label} · ${v.hook}</option>`).join('')}</select></div>
+      <div class="row"><div class="field"><label>调性</label><input class="input" id="mEtone" value="轻松幽默"></div>
+        <div class="field"><label>品牌色</label><input type="color" id="mEcolor" value="#ff6b35" style="width:100%;height:38px;border:1px solid var(--line);border-radius:8px;background:var(--bg-3)"></div></div>
+      <div class="mini-note">网页只生成结构与文案；真实图片 / 视频由导演对话或外部工具生成后回填，再用本地脚本合成 MP4。</div>
+    `, `<button class="btn btn-ghost" data-mact="cancel">取消</button><button class="btn btn-primary" data-mact="confirm">生成完整项目</button>`, true);
+    modalConfirm = () => {
+      const product = $('#mEproduct').value.trim();
+      if (!product) { toast('请填写产品名', 'err'); return; }
+      try {
+        const proj = EcomWorkflow.create({
+          product, benefit: $('#mEbenefit').value.trim() || '一用就见效',
+          audience: $('#mEaudience').value.trim() || '上班族',
+          twist: $('#mEtwist').value, tone: $('#mEtone').value.trim() || '轻松幽默',
+          brandColor: $('#mEcolor').value
+        });
+        Store.addProjectObject(proj);
+        closeModal(); refresh(); currentView = 'lineage'; render();
+        toast('已生成 7 镜完整项目，已跳到谱系视图', 'ok');
+      } catch (e) { toast('生成失败：' + (e.message || '未知错误'), 'err'); }
     };
   }
 
@@ -2025,9 +2851,22 @@ const Bridge = (() => {
       const title = ('SHOT-' + b.split('\n')[0].trim()) || ('SHOT-' + (idx + 1));
       const get = k => { const m = b.match(new RegExp('- ' + k + '：([^\\n]+)')); return m ? m[1].trim() : ''; };
       const dur = parseInt((b.match(/- 时长：(\d+)s/) || [])[1] || '3', 10);
+      const modeRaw = get('生成模式');
+      const mode = /videoExtend2video/i.test(modeRaw) ? 'videoExtend2video' : /mixed2video/i.test(modeRaw) ? 'mixed2video' : 'text2video';
+      const tailFrom = (get('衔接').match(/SHOT-?[\w-]+/i) || [''])[0].replace(/^SHOT-?/i, 'SHOT-');
+      const layered = get('声音分层');
+      const soundLayers = [];
+      if (layered) layered.split(/[｜|]/).map(s => s.trim()).filter(Boolean).forEach(part => {
+        const vm = part.match(/^([^：:]+)[：:]\s*(.*)$/);
+        const label = vm ? vm[1].trim() : '', text = vm ? vm[2].trim() : part;
+        if (!text || text === '无') return;
+        soundLayers.push({ kind: /旁白|VO/i.test(label) ? 'vo' : /环境/i.test(label) ? 'ambience' : /音效/i.test(label) ? 'sfx' : 'bgm', text, voiceId: (part.match(/VOICE-[\w-]+/) || [''])[0] });
+      });
       shots.push({ id: title.replace(/[^\w-]/g, ''), name: title.split('·').pop().trim(), sceneId: (get('来源').match(/EP\d+-SC\d+/) || ['EP001-SC001'])[0], duration: dur,
         purpose: get('目的'), shotSize: get('景别/机位') || '中景', camera: get('景别/机位') || '', movement: get('运镜') || '固定',
-        start: get('起点'), action: get('动作'), end: get('终点'), assets: get('出场设定'), sound: get('声音') });
+        start: get('起点'), action: get('动作'), end: get('终点'), assets: get('出场设定'),
+        sound: get('声音') || soundLayers.map(l => l.text).join('；'),
+        mode, tailFrom: tailFrom || '', transition: get('转场') || '硬切', soundLayers, segment: '' });
     });
     if (shots.length) p.storyboard.shots = shots;
   }
@@ -2063,7 +2902,7 @@ const Bridge = (() => {
         const scriptText = p.script.scenes.map(s => `## ${s.id} ${s.location}\n${s.content}`).join('\n\n');
         text = await CloudAI.generateStoryboard(scriptText, p.storyboard.targetSeconds, partial => {
           const el = streamEl(); if (el) { el.textContent = partial.slice(-600); el.scrollTop = el.scrollHeight; }
-        });
+        }, p.production);
         const parsed = Bridge.parseBundle([{ name: '分镜.md', content: text }]).storyboard;
         if (!parsed || !parsed.shots.length) throw new Error('AI 返回内容未能解析为分镜');
         p.storyboard.shots = parsed.shots;
@@ -2088,7 +2927,11 @@ const Bridge = (() => {
     const shot = p.storyboard.shots.find(s => s.id === task.shotId) || { name: task.name, action: task.prompt };
     toast('AI 正在改写提示词…', 'ok');
     try {
-      const prompt = await CloudAI.generatePrompt(shot, p.setup.characters);
+      const prompt = await CloudAI.generatePrompt(shot, p.setup.characters, null, {
+        production: p.production,
+        ratio: (p.export.settings.ratio || '9:16').includes('9:16') ? '9:16' : '16:9',
+        mode: task.mode
+      });
       if (!prompt.trim()) throw new Error('返回为空');
       task.prompt = prompt.trim().replace(/^["「]|["」]$/g, '');
       scheduleSave(); render();
@@ -2193,6 +3036,20 @@ const Bridge = (() => {
       scheduleSave(); closeModal(); render(); toast('道具已添加', 'ok'); };
   }
 
+  function modalVoice(p) {
+    openModal('新增音色锚点', `
+      <div class="field"><label>锚点名称（如：说书先生 / 旁白）</label><input class="input" id="mVname" placeholder="说书先生"></div>
+      <div class="field"><label>音色描述</label><input class="input" id="mVdesc" placeholder="中老年男声、沙哑、语速偏慢"></div>
+      <div class="field"><label>样本说明</label><input class="input" id="mVsample" placeholder="8 秒干净人声样本"></div>
+      <div class="mini-note">音色锚点 ID 自动生成（VOICE-xxx），供分镜的「声音分层」引用，保证跨镜音色一致。本台只登记锚点，不生成音频。</div>`);
+    modalConfirm = () => {
+      const name = $('#mVname').value.trim(); if (!name) { toast('请填写名称', 'err'); return; }
+      if (!Array.isArray(p.setup.voiceAssets)) p.setup.voiceAssets = [];
+      p.setup.voiceAssets.push({ id: 'VOICE-' + Store.uid('V').split('_').pop().toUpperCase(), name, desc: $('#mVdesc').value, sample: $('#mVsample').value, voiceId: '' });
+      scheduleSave(); closeModal(); render(); toast('音色锚点已添加', 'ok');
+    };
+  }
+
   function modalShot(p, idx) {
     const s = idx != null ? p.storyboard.shots[idx] : { id: 'SHOT-EP001-' + String(p.storyboard.shots.length + 1).padStart(3, '0'), name: '', sceneId: 'EP001-SC001', duration: 3, purpose: '', shotSize: '中景', camera: '', movement: '固定', start: '', action: '', end: '', assets: '', sound: '' };
     openModal(idx != null ? '编辑镜头' : '新增镜头', `
@@ -2203,6 +3060,13 @@ const Bridge = (() => {
         <div class="field"><label>景别/机位</label><input class="input" id="mHsize" value="${esc(s.shotSize)}"></div></div>
       <div class="row"><div class="field"><label>运镜</label><input class="input" id="mHmove" value="${esc(s.movement)}"></div>
         <div class="field"><label>出场设定ID</label><input class="input" id="mHassets" value="${esc(s.assets)}"></div></div>
+      <div class="row"><div class="field"><label>生成模式</label><select class="select" id="mHmode">
+        <option value="text2video" ${s.mode === 'text2video' ? 'selected' : ''}>text2video</option>
+        <option value="mixed2video" ${s.mode === 'mixed2video' ? 'selected' : ''}>mixed2video</option>
+        <option value="videoExtend2video" ${s.mode === 'videoExtend2video' ? 'selected' : ''}>videoExtend2video</option></select></div>
+        <div class="field"><label>衔接尾帧</label><input class="input" id="mHtail" value="${esc(s.tailFrom || '')}" placeholder="SHOT-EP001-001"></div></div>
+      <div class="row"><div class="field"><label>转场</label><input class="input" id="mHtrans" value="${esc(s.transition || '硬切')}"></div>
+        <div class="field"><label>分段组</label><input class="input" id="mHseg" value="${esc(s.segment || '')}" placeholder="SEG-1"></div></div>
       <div class="field"><label>目的</label><input class="input" id="mHpurpose" value="${esc(s.purpose)}"></div>
       <div class="field"><label>起点 → 动作 → 终点</label>
         <input class="input" id="mHstart" value="${esc(s.start)}" placeholder="起点" style="margin-bottom:6px">
@@ -2212,7 +3076,9 @@ const Bridge = (() => {
     modalConfirm = () => {
       const obj = { id: $('#mHid').value.trim() || Store.uid('SHOT'), name: $('#mHname').value.trim() || '未命名镜头', sceneId: $('#mHscene').value.trim(),
         duration: +$('#mHdur').value || 3, purpose: $('#mHpurpose').value, shotSize: $('#mHsize').value, camera: $('#mHsize').value, movement: $('#mHmove').value,
-        start: $('#mHstart').value, action: $('#mHaction').value, end: $('#mHend').value, assets: $('#mHassets').value, sound: $('#mHsound').value };
+        start: $('#mHstart').value, action: $('#mHaction').value, end: $('#mHend').value, assets: $('#mHassets').value, sound: $('#mHsound').value,
+        mode: $('#mHmode').value, tailFrom: $('#mHtail').value.trim(), transition: $('#mHtrans').value.trim() || '硬切', segment: $('#mHseg').value.trim(),
+        soundLayers: (idx != null && p.storyboard.shots[idx].soundLayers) ? p.storyboard.shots[idx].soundLayers : [] };
       if (idx != null) p.storyboard.shots[idx] = obj; else p.storyboard.shots.push(obj);
       scheduleSave(); closeModal(); render(); toast('镜头已保存', 'ok');
     };
@@ -2225,11 +3091,18 @@ const Bridge = (() => {
       <div class="field"><label>任务名称</label><input class="input" id="mGname" placeholder="留空则取镜头名"></div>
       <div class="row"><div class="field"><label>类型</label><select class="select" id="mGtype"><option value="video">视频</option><option value="image">图片</option></select></div>
         <div class="field"><label>模型</label><select class="select" id="mGmodel"><option>Seedance</option><option>即梦</option><option>LibTV</option></select></div></div>
+      <div class="row"><div class="field"><label>生成模式</label><select class="select" id="mGmode">
+        <option value="text2video">text2video · 从零生成</option>
+        <option value="mixed2video">mixed2video · 多参考保人设</option>
+        <option value="videoExtend2video">videoExtend2video · 尾帧续写</option></select></div>
+        <div class="field"><label>衔接尾帧（承接镜头 ID，可留空）</label><input class="input" id="mGtail" placeholder="SHOT-EP001-001"></div></div>
       <div class="field"><label>提示词</label><textarea class="textarea" id="mGprompt" style="min-height:90px"></textarea></div>`);
     modalConfirm = () => {
       const shotId = $('#mGshot').value || 'SHOT-MANUAL';
       const name = $('#mGname').value.trim() || (p.storyboard.shots.find(s => s.id === shotId)?.name || '新任务');
-      p.generate.tasks.unshift({ id: Store.uid('gen'), shotId, name, type: $('#mGtype').value, model: $('#mGmodel').value, status: 'queued', progress: 0, prompt: $('#mGprompt').value, createdAt: Store.now() });
+      const tail = $('#mGtail').value.trim();
+      p.generate.tasks.unshift({ id: Store.uid('gen'), shotId, name, type: $('#mGtype').value, model: $('#mGmodel').value, status: 'queued', progress: 0, prompt: $('#mGprompt').value, createdAt: Store.now(),
+        mode: $('#mGmode').value, tailFrom: tail, dependsOn: tail ? [tail] : [] });
       scheduleSave(); closeModal(); render(); toast('任务已加入队列', 'ok');
     };
   }
